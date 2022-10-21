@@ -1,14 +1,14 @@
 Duration:
------------------------------
+---
 Researching: 20 Oct 2022
-Design: 21 Oct 2022
+Design & implementation: 21 Oct 2022
 
 Details:
------------------------------
+---
 ffmpeg version 2.8.17-0ubuntu0.1
 
 Reference:
------------------------------
+---
 * FFMPEG man page `man ffmpeg`.
 * Video quality measurement (old): https://en.wikipedia.org/wiki/Visual_information_fidelity (python package: https://pypi.org/project/sewar/)
 * More video quality measurements (and benchmark code): https://piq.readthedocs.io/en/latest/overview.html
@@ -38,7 +38,7 @@ Reference:
 * Post processing filter: https://trac.ffmpeg.org/wiki/Postprocessing (Postprocessing is usually only useful with older codecs. Newer ones (including h.264, h.265, and VP8/9) all include deblocking filters as part of the codec. Most of the time it won't help to postprocess h.264, HEVC, VP8, or VP9 video. Postprocessing IS certainly useful for artifacty MPEG2 and MPEG4-ASP (divx, xvid), and even older codecs, as their output is often full of blocking and ringing when the encoder didn't have enough bitrate to make the output look good http://underpop.online.fr/f/ffmpeg/help/deblock.htm.gz)
 
 Terms (sourced from the sites referenced above):
------------------------------
+---
 * Transcoding (which is a process of decoding, reformatting and re-encoding files) takes source footage of various types and recodes it into a single video codec or file format. Video transcoding, sometimes called video encoding, is the conversion from one digital encoding format to another. This involves translating all three elements of a digital video at the same time — the file format, the video, and the audio. It involves a two-step process. First, the original file is decoded to an uncompressed format. Second, this uncompressed format is then encoded into the target format.
 * Video format specifies how video and audio have been combined and tells playback devices how to play the files.
 * Video and audio codec formats refer to the technologies used to both create and play back the digital video and audio. DaCast, for example, requires an MPEG-4 (MP4) file format with an H.264 video codec. Windows Media Video (WMV) files are Advanced Systems Format (.asf) files that include audio, video, or both compressed with Windows Media Audio (WMA) and Windows Media Video (WMV) codecs.
@@ -64,9 +64,12 @@ source is compared against the corresponding pixel at the received video. 2. Red
 
 
 Improvements:
----------------------------
+---
 * Asking about the end user or use case, to be able to choose the right parameters for encoding.
 * Hiring video consultants for some training to build in-house expertise.
 * Trying software like Sorenson and others, to check for better encoding capability.
 * Building in-house knowledge by automating software that tries out various parameters and outcomes.
 
+Questions:
+---
+* Does audio lag happen after encoding? Under what situations?

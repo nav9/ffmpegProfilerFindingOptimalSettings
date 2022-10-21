@@ -1,7 +1,7 @@
 #!/bin/bash
 #Source: https://gist.github.com/mattst/9ffee93f5053ba59275af800f0dbd654
 
-infile="TestClipTwoMin.mp4"
+infile="sample_1280x720_surfing_with_audio.mkv"
 datafile="TestClipTwoMinData.csv"
 
 crfs=("18" "19" "20" "21" "22" "23" "24" "25" "26" "27")
