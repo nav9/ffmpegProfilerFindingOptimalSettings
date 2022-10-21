@@ -1,3 +1,4 @@
+import os
 import logging
 from logging.handlers import RotatingFileHandler
 from programConstants import constants as const
@@ -47,6 +48,9 @@ class Parameter:
     def reset(self):
         self.temp = self.values[:]
         self.index = None
+        
+    def getParameterName(self):
+        return self.name
     
 #-------------------------------------------------------
 #--- Selectors. Helps with selecting encoding parameters
@@ -56,16 +60,19 @@ class BinarySearchSelector:
         self.parameters = [] 
         self.parameters.append(Parameter(const.EncodingParameters.PRESET, const.EncodingParameters.preset_values))
         self.parameters.append(Parameter(const.EncodingParameters.CRF, const.EncodingParameters.CRF_values))
-        self.selectedParameters = []
+        self.selectedParameters = ""
     
-    def getParameters(self):
-        
+    def getParameters(self):#should return an empty dict if no more parameters are there to process
+        previousResultWasGood = None
+        for parameter in self.parameters:#TODO: needs to be more elaborate
+            parameterValue, areOptionsExhausted = parameter.getNewParameterValue(previousResultWasGood)
+            self.selectedParameters += parameter.getParameterName() + str(parameterValue)
         return self.selectedParameters
-    
 
-class EvolutionarySearchSelector:
+
+class EvolutionarySearchSelector: #another way of selecting parameters
     def __init__(self):
-        self.parameters = dict()
+        pass
         
 
 #-------------------------------------------------------
@@ -75,11 +82,18 @@ class Profiler:
     def __init__(self, fileOps, report):        
         self.fileOps = fileOps
         self.report = report
-        self.parameterSelector = BinarySearchSelector()
+        self.parameterSelector = BinarySearchSelector() #TODO: could pass this as a parameter to decouple
+        self.bestParametersSoFar = None #parameters approved by the User or video quality evaluation function
         
     def startTrials(self, videoFile):
-        parameters = self.parameterSelector.getParameters() #will return None if no more parameters are generated
+        logging.info(f"\n\nStarting trials for video: {videoFile}")
+        parameters = self.parameterSelector.getParameters() #will return an empty string if no more parameters are generated
         while parameters:
-            pass
+            self._beginEncoding(parameters, videoFile)
             parameters = self.parameterSelector.getParameters()
     
+    def _beginEncoding(self, parameters, originalFile):
+        self.fileOps.createDirectoryIfNotExisting(const.GlobalConstants.encodedVideoFilesFolder)
+        outputFilename = os.path.join(const.GlobalConstants.encodedVideoFilesFolder, f"{}")
+        command = f"ffmpeg -i {originalFile} -c:a copy -c:v libx264 -crf '$crf' -preset '$preset' '$outfile'"
+        
