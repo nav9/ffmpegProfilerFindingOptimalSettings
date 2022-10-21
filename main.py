@@ -9,7 +9,7 @@ sys.dont_write_bytecode = True #Prevents the creation of some annoying cache fil
 import logging
 from logging.handlers import RotatingFileHandler
 from programConstants import constants as const
-from fileAndFolder import fileFolderOperations, reports
+from fileAndFolder import fileFolderOperations, reports, profilers
 
 #TODO: shift log file config to file
 logFileName = 'logs_ffmpeg.log'
@@ -27,8 +27,10 @@ if __name__ == '__main__':
     profilers = []
     videoFilesToProcess = fileOps.getNamesOfVideoFilesToProcess(const.GlobalConstants.originalVideoFilesFolder, const.GlobalConstants.supportedFormats)
     report.add("Processing: " + str(videoFilesToProcess))
+    #---start profiling
+    profiler = profilers.Profiler(fileOps, report)
     for video in videoFilesToProcess:
-        pass
+        profiler.startEncoding(video)
     
     report.generateReport(True)
     

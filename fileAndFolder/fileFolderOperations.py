@@ -130,12 +130,13 @@ class FileOperations:
                 _, extension = self.getFilenameAndExtension(filename)
                 if extension in supportedFormats:
                     videoNamesWithPath.append(os.path.join(folderPath, filename))
-        else:
+        else:#TODO: extension name may not always imply video container type
             self.createDirectoryIfNotExisting(folderPath)
             logging.critical("This program requires video files to be placed in this folder: " + folderPath)
             logging.critical("Please place the files in the folder and restart. The folder didn't exist earlier, but is created now.")
             raise FileNotFoundError("Video files need to be in this folder: " + folderPath)
         if not videoNamesWithPath:
+            logging.critical("No supported videos detected")
             raise FileNotFoundError("No videos available for processing. Supported formats (see program's global constants): "+str(supportedFormats))
         return videoNamesWithPath
                 
