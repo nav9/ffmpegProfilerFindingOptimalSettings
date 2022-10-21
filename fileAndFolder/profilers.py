@@ -21,11 +21,11 @@ class Parameter:
         self.temp = self.values[:] #copying values
         self.index = None
     
-    def getNewParameterValue(self, previousResultWasGood):
+    def getNewParameterValue(self, previousResultWasGood):#This function should not be called without a reset, once exhaustedOptions is True
         exhaustedOptions = False
         if previousResultWasGood == None: #being called the first time since a reset or initialization
             self._moveIndexToMiddleOfList()
-            parameterValue = self.temp[self.index]
+            parameterValue = self.temp[self.index]            
         else:
             if len(self.temp) == 1:#the only parameter left. No more to bisect
                 parameterValue = self.temp[const.GlobalConstants.FIRST_POSITION_IN_LIST]
@@ -37,12 +37,12 @@ class Parameter:
                     self.temp = self.temp[:self.index] #slice list from the start to just before the previous index to try out a better parameter
                 self._moveIndexToMiddleOfList() #move the index to the middle of the newly sliced smaller list
                 parameterValue = self.temp[self.index] #new parameter value
+        if len(self.temp) <= 2:#if there are 2 or less items in the list
+            exhaustedOptions = True                
         return parameterValue, exhaustedOptions          
 
-    def _moveIndexToMiddleOfList(self):
-        self.index = const.GlobalConstants.FIRST_POSITION_IN_LIST #if length of list is 1, index position will be 0
-        if len(self.temp) > 1:
-            self.index = int(len(self.temp) / 2)
+    def _moveIndexToMiddleOfList(self): #if list is empty (which it shouldn't ever be, this function will throw an error)
+        self.index = int(len(self.temp) / 2)
     
     def reset(self):
         self.temp = self.values[:]
