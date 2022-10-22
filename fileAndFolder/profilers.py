@@ -1,4 +1,5 @@
 import os
+import time
 import shlex
 import psutil
 import subprocess
@@ -107,19 +108,47 @@ class Profiler:
         outputFilename = ""
         for name, value in self.currentParameters.items(): #From Python 3.6 onwards, the standard dict type maintains insertion order by default.
             outputFilename += f"{name}{value}_"
-            if name == const.EncodingParameters.CRF:#TODO: Ideally, the CRF constant itself could be "-crf"
-                parameters += f"-crf {value}"                
-            if name == const.EncodingParameters.PRESET:#TODO: The preset name itself could be "-preset"
-                parameters += f"-preset {value}"
+            parameters += f" {name} {value} " #Note: the spaces are important
         
         outputFilename += ".mp4" #TODO: add proper extension
         outputFilename = os.path.join(folderForThisVideo, outputFilename)
-        #command = shlex.split(f"ffmpeg -i {originalFile} -c:a copy -c:v libx264 {parameters} {outputFilename}")       
-        command = shlex.split(f"ffmpeg -i {originalFile} -c:a copy {outputFilename}")       
+        command = shlex.split(f"ffmpeg -y -i {originalFile} -c:a copy -c:v libx264 {parameters} {outputFilename}")       
         #---Run command https://stackoverflow.com/questions/4256107/running-bash-commands-in-python
-        logging.info(f"\n\n\n\n\nRunning: {command}")
-        #TODO: check if file already exists, and delete it if it is of zero size
-        process = subprocess.run(command, stdout=subprocess.PIPE)
-        output, error = process.communicate()
+        logging.info("\n---------------------\n--- NEW RUN\n---------------------")
+        logging.info(f"Running: {command}")
+        try:
+            #process = subprocess.run(command, stdout = subprocess.PIPE) #https://docs.python.org/3/library/subprocess.html#module-subprocess
+            ffmpegProcess = subprocess.Popen(command) #https://stackoverflow.com/questions/636561/how-can-i-run-an-external-command-asynchronously-from-python
+            logging.info(f"Process id: {ffmpegProcess.pid}")            
+            #---Keep polling to check if the ffmpegProcess completed and perform profiling too
+            ffmpegProcessRepresentation = psutil.Process(pid = ffmpegProcess.pid) #https://psutil.readthedocs.io/en/latest/index.html?highlight=oneshot#processes
+            processStartTime = ffmpegProcessRepresentation.create_time(); processEndTime = processStartTime
+            logging.info(f"Process start time: {processStartTime}")
+            while True:
+                returnCode = ffmpegProcess.poll()
+                if returnCode == None: #process still running
+                    try:
+                        self._performProfiling(ffmpegProcessRepresentation)
+                    except (psutil.AccessDenied, psutil.NoSuchProcess) as e:
+                        logging.error(f"Unable to profile this process: {e}")
+                else: #process completed
+                    processEndTime = int(time.time())
+                    logging.info(f"Finished encoding {videoName}")
+                    break
+        except subprocess.CalledProcessError as e:
+            logging.error(f"The encoding ran into some errors: {e}") #TODO: handle this elegantly
+        
+        
+    def _performProfiling(self, processRepresentation): #https://stackoverflow.com/questions/70724655/how-to-get-ram-and-cpu-time-consumption-python-app-on-linux
+        with processRepresentation.oneshot():
+            while processRepresentation.status() == 'running':
+                print(f"Name: {processRepresentation.name()}")  # execute internal routine once collecting multiple info
+                print(f"CPU Time:{processRepresentation.cpu_times()}")  # return cached value
+                print(f"Memory: {processRepresentation.memory_info().vms}")  # return cached value
+                print(f"CPU Percent: {processRepresentation.cpu_percent()}")  # return cached value
+                print(f"Creation time: {processRepresentation.create_time()}")  # return cached value
+                print(f"ppid: {processRepresentation.ppid()}")  # return cached value
+                print(f"status: {processRepresentation.status()}")  # return cached value
+        time.sleep(10)
         
     
