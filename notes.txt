@@ -10,16 +10,19 @@ ffmpeg version 2.8.17-0ubuntu0.1
 Reference:
 ---
 * FFMPEG man page `man ffmpeg`.
+* Encoding on x86 vs. ARM: Mathá, Roland, et al. "Where to Encode: A Performance Analysis of x86 and Arm-based Amazon EC2 Instances." 2021 IEEE 17th International Conference on eScience (eScience). IEEE, 2021.
+* FFMPEG H.264 video encoding guide: https://trac.ffmpeg.org/wiki/Encode/H.264
 * Video quality measurement (old): https://en.wikipedia.org/wiki/Visual_information_fidelity (python package: https://pypi.org/project/sewar/)
 * More video quality measurements (and benchmark code): https://piq.readthedocs.io/en/latest/overview.html
 * FFMPEG profiling tool (contains only Docker containers): https://github.com/mboussaa/ffmpeg-profiling-tool
 * Timeseries database for storing metrics: https://www.influxdata.com/influxdb-pricing/
 * Observability of databases: https://grafana.com/
 * Commercial encoding: https://www.telestream.net/
-* pyTranscoder for FFMPEG: https://pypi.org/project/pytranscoder-ffmpeg/
+* pyTranscoder for FFMPEG (automate transcoding for people encoding lots of video. It is more than a wrapper - it is a workflow and job manager): https://pypi.org/project/pytranscoder-ffmpeg/
 * Linux app profiling: https://stackoverflow.com/questions/2229336/linux-application-profiling
 * FFMPEG quality cheatsheets: https://superuser.com/questions/490683/cheat-sheets-and-presets-settings-that-actually-work-with-ffmpeg-1-0
-* Explanation: https://medium.com/videocoin/what-is-video-transcoding-and-why-do-you-do-it-348a2610cefc
+* FFMPEG Python bindings: https://kkroening.github.io/ffmpeg-python/
+* Transcoding explanation: https://medium.com/videocoin/what-is-video-transcoding-and-why-do-you-do-it-348a2610cefc
 * Effect of CRF on Youtube video quality: https://www.dropbox.com/s/fsxew599dw30c5w/Report.docx?dl=0
 * Film making terms glossary: https://www.studiobinder.com/blog/movie-film-terms/
 * Visual information fidelity: https://github.com/pavancm/Visual-Information-Fidelity---Python
@@ -36,6 +39,10 @@ Reference:
 * Bit rate tables: https://filmora.wondershare.com/video-editing-tips/what-is-video-bitrate.html
 * Artifact: https://en.wikipedia.org/wiki/Artifact_(error). https://en.wikipedia.org/wiki/Ringing_artifacts
 * Post processing filter: https://trac.ffmpeg.org/wiki/Postprocessing (Postprocessing is usually only useful with older codecs. Newer ones (including h.264, h.265, and VP8/9) all include deblocking filters as part of the codec. Most of the time it won't help to postprocess h.264, HEVC, VP8, or VP9 video. Postprocessing IS certainly useful for artifacty MPEG2 and MPEG4-ASP (divx, xvid), and even older codecs, as their output is often full of blocking and ringing when the encoder didn't have enough bitrate to make the output look good http://underpop.online.fr/f/ffmpeg/help/deblock.htm.gz)
+* Setting H.264 profile (not necessary, as per https://trac.ffmpeg.org/wiki/Encode/H.264): https://superuser.com/questions/563997/how-can-i-set-a-h-264-profile-level-with-ffmpeg
+* Profiling Python code: https://stackoverflow.com/questions/582336/how-do-i-profile-a-python-script
+* Profiling FFMPEG using C++: https://ffmpeg-devel.ffmpeg.narkive.com/I8tuBDvU/profiling-the-library
+* Profiling from Python: https://psutil.readthedocs.io/en/latest/index.html?highlight=oneshot#psutil.Process.oneshot
 
 Terms (sourced from the sites referenced above):
 ---

@@ -31,5 +31,5 @@ class Reports:
             self.fileOps.createDirectoryIfNotExisting(self.folderToStore)
             self.reportFilenameWithPath = os.path.join(self.folderToStore, "Report_" + str(datetime.datetime.now()) + ".txt")
             self.fileOps.writeLinesToFile(self.reportFilenameWithPath, self.report)
-        logging.info('Completed. Report: ' + self.reportFilenameWithPath)            
+        logging.info(f'Completed. Report: {self.reportFilenameWithPath}')            
         

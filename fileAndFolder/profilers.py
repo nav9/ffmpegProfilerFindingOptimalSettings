@@ -1,4 +1,7 @@
 import os
+import shlex
+import psutil
+import subprocess
 import logging
 from logging.handlers import RotatingFileHandler
 from programConstants import constants as const
@@ -17,7 +20,7 @@ class Parameter:
     def __init__(self, parameterName, parameterValues):
         self.name = parameterName
         if not parameterValues:#list is empty
-            raise IndexError(parameterName + " has no corresponding values supplied")
+            raise IndexError(f"{parameterName} has no corresponding values supplied")
         self.values = parameterValues
         self.temp = self.values[:] #copying values
         self.index = None
@@ -60,13 +63,13 @@ class BinarySearchSelector:
         self.parameters = [] 
         self.parameters.append(Parameter(const.EncodingParameters.PRESET, const.EncodingParameters.preset_values))
         self.parameters.append(Parameter(const.EncodingParameters.CRF, const.EncodingParameters.CRF_values))
-        self.selectedParameters = ""
+        self.selectedParameters = dict() #From Python 3.6 onwards, the standard dict type maintains insertion order by default.
     
     def getParameters(self):#should return an empty dict if no more parameters are there to process
         previousResultWasGood = None
         for parameter in self.parameters:#TODO: needs to be more elaborate
             parameterValue, areOptionsExhausted = parameter.getNewParameterValue(previousResultWasGood)
-            self.selectedParameters += parameter.getParameterName() + str(parameterValue)
+            self.selectedParameters[parameter.getParameterName()] = str(parameterValue)
         return self.selectedParameters
 
 
@@ -83,17 +86,40 @@ class Profiler:
         self.fileOps = fileOps
         self.report = report
         self.parameterSelector = BinarySearchSelector() #TODO: could pass this as a parameter to decouple
+        self.currentParameters = None
         self.bestParametersSoFar = None #parameters approved by the User or video quality evaluation function
         
     def startTrials(self, videoFile):
         logging.info(f"\n\nStarting trials for video: {videoFile}")
-        parameters = self.parameterSelector.getParameters() #will return an empty string if no more parameters are generated
-        while parameters:
-            self._beginEncoding(parameters, videoFile)
-            parameters = self.parameterSelector.getParameters()
+        self.currentParameters = self.parameterSelector.getParameters() #will return an empty string if no more parameters are generated
+        while self.currentParameters:
+            self._beginEncoding(videoFile)
+            self.currentParameters = self.parameterSelector.getParameters()
     
-    def _beginEncoding(self, parameters, originalFile):
+    def _beginEncoding(self, originalFile):
         self.fileOps.createDirectoryIfNotExisting(const.GlobalConstants.encodedVideoFilesFolder)
-        outputFilename = os.path.join(const.GlobalConstants.encodedVideoFilesFolder, f"{}")
-        command = f"ffmpeg -i {originalFile} -c:a copy -c:v libx264 -crf '$crf' -preset '$preset' '$outfile'"
+        #---create a folder to store various encoded videos of this video
+        videoName, extension = self.fileOps.getFilenameAndExtension(originalFile)
+        folderForThisVideo = os.path.join(const.GlobalConstants.encodedVideoFilesFolder, videoName, "")#the quotes in the end add a folder slash
+        self.fileOps.createDirectoryIfNotExisting(folderForThisVideo)        
+        #---create the command for encoding
+        parameters = ""
+        outputFilename = ""
+        for name, value in self.currentParameters.items(): #From Python 3.6 onwards, the standard dict type maintains insertion order by default.
+            outputFilename += f"{name}{value}_"
+            if name == const.EncodingParameters.CRF:#TODO: Ideally, the CRF constant itself could be "-crf"
+                parameters += f"-crf {value}"                
+            if name == const.EncodingParameters.PRESET:#TODO: The preset name itself could be "-preset"
+                parameters += f"-preset {value}"
         
+        outputFilename += ".mp4" #TODO: add proper extension
+        outputFilename = os.path.join(folderForThisVideo, outputFilename)
+        #command = shlex.split(f"ffmpeg -i {originalFile} -c:a copy -c:v libx264 {parameters} {outputFilename}")       
+        command = shlex.split(f"ffmpeg -i {originalFile} -c:a copy {outputFilename}")       
+        #---Run command https://stackoverflow.com/questions/4256107/running-bash-commands-in-python
+        logging.info(f"\n\n\n\n\nRunning: {command}")
+        #TODO: check if file already exists, and delete it if it is of zero size
+        process = subprocess.run(command, stdout=subprocess.PIPE)
+        output, error = process.communicate()
+        
+    

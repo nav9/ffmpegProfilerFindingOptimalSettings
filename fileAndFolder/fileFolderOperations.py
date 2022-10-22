@@ -41,7 +41,7 @@ class FileOperations:
         folderPaths = []; filesInFolder = []; fileSizes = []
         logging.info("Obtaining a list of folders and files...")
         result = os.walk(folderToConsider, followlinks=False) #Won't throw an error if folder does not exist. followlinks=False allows skipping symlinks. It's False by default. Just making it obvious here
-        logging.info("Walking to collect names of files in this folder: " + str(folderToConsider))
+        logging.info(f"Walking to collect names of files in this folder: {folderToConsider}")
         for oneFolder in result:
             folderPath = self.folderSlash(oneFolder[self.FULL_FOLDER_PATH])
             folderPaths.append(folderPath)
@@ -132,12 +132,12 @@ class FileOperations:
                     videoNamesWithPath.append(os.path.join(folderPath, filename))
         else:#TODO: extension name may not always imply video container type
             self.createDirectoryIfNotExisting(folderPath)
-            logging.critical("This program requires video files to be placed in this folder: " + folderPath)
+            logging.critical(f"This program requires video files to be placed in this folder: {folderPath}")
             logging.critical("Please place the files in the folder and restart. The folder didn't exist earlier, but is created now.")
-            raise FileNotFoundError("Video files need to be in this folder: " + folderPath)
+            raise FileNotFoundError(f"Video files need to be in this folder: {folderPath}")
         if not videoNamesWithPath:
             logging.critical("No supported videos detected")
-            raise FileNotFoundError("No videos available for processing. Supported formats (see program's global constants): "+str(supportedFormats))
+            raise FileNotFoundError(f"No videos available for processing. Supported formats (see program's global constants): {supportedFormats}")
         return videoNamesWithPath
                 
     def deleteFolderIfItExists(self, folderPath):
@@ -145,14 +145,14 @@ class FileOperations:
             if os.path.exists(folderPath):
                 shutil.rmtree(folderPath, ignore_errors = True) #The ignore_errors is for when the folder has read-only files https://stackoverflow.com/a/303225/453673
         except Exception as e:
-            logging.error("Error when deleting folder: " + folderPath + ". Exception: " + str(e))
+            logging.error(f"Error when deleting folder: {folderPath}. Exception: {e}")
 
     def deleteFileIfItExists(self, filenameWithPath):
         try:
             if os.path.isfile(filenameWithPath):
                 os.remove(filenameWithPath)
         except Exception as e:
-            logging.error("Error when deleting file: " + filenameWithPath + ". Exception: " + str(e))
+            logging.error(f"Error when deleting file: {filenameWithPath}. Exception: {e}")
 
     """ Move file to another directory. Renaming while moving is possible """
     def moveFile(self, existingPath, existingFilename, newPath, newFilename):
@@ -160,7 +160,7 @@ class FileOperations:
         try:
             pathToMovedFile = shutil.move(existingPath + existingFilename, newPath + newFilename)    
         except FileNotFoundError:
-            logging.error("Could not find file: " + existingPath + existingFilename + " when trying to move it to " + newPath + newFilename)
+            logging.error(f"Could not find file: {existingPath + existingFilename} when trying to move it to {newPath + newFilename}")
         return pathToMovedFile
 
     """ Copy file to another directory. Renaming while moving is possible.  If destination specifies a directory, the file will be copied into destination using the base filename from the source. If destination specifies a file that already exists, it will be replaced. """
@@ -169,7 +169,7 @@ class FileOperations:
         try:
             pathToCopiedFile = shutil.copy2(filenameWithPath, destinationFolderOrFileWithPath)
         except FileNotFoundError:
-            logging.error("Could not find file: " + filenameWithPath + " or folder " + destinationFolderOrFileWithPath)    
+            logging.error(f"Could not find file: {filenameWithPath} or folder {destinationFolderOrFileWithPath}")    
         return pathToCopiedFile
     
     """ Adds a slash at the end of the folder name if it isn't already present """

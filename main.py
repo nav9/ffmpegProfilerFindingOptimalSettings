@@ -24,13 +24,12 @@ logging.getLogger().setLevel(loggingLevel)
 if __name__ == '__main__':
     fileOps = fileFolderOperations.FileOperations()
     report = reports.Reports(const.GlobalConstants.reportFolder, fileOps)
-    profilers = []
     videoFilesToProcess = fileOps.getNamesOfVideoFilesToProcess(const.GlobalConstants.originalVideoFilesFolder, const.GlobalConstants.supportedFormats)
-    report.add("Processing: " + str(videoFilesToProcess))
+    report.add(f"Processing: {videoFilesToProcess}")
     #---start profiling
     profiler = profilers.Profiler(fileOps, report)
     for video in videoFilesToProcess:
-        profiler.startEncoding(video)
+        profiler.startTrials(video)
     
     report.generateReport(True)
     
