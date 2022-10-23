@@ -20,22 +20,24 @@ logging.getLogger().addHandler(handler)
 logging.getLogger().setLevel(loggingLevel)
 
 class Parameter:
-    def __init__(self, parameterName, parameterValues):
+    def __init__(self, nextParameter, parameterName, parameterValues):
         self.name = parameterName
         if not parameterValues:#list is empty
             raise IndexError(f"{parameterName} has no corresponding values supplied")
         self.values = parameterValues
         self.temp = self.values[:] #copying values
         self.index = None
+        self.parameterValue = None
+        self.nextParameter = nextParameter
     
-    def getNewParameterValue(self, previousResultWasGood):#This function should not be called without a reset, once exhaustedOptions is True
+    def createNewParameterValue(self, previousResultWasGood):#This function should not be called without a reset, once exhaustedOptions is True
         exhaustedOptions = False
         if previousResultWasGood == None: #being called the first time since a reset or initialization
             self._moveIndexToMiddleOfList()
-            parameterValue = self.temp[self.index]            
+            self.parameterValue = self.temp[self.index]            
         else:
             if len(self.temp) == 1:#the only parameter left. No more to bisect
-                parameterValue = self.temp[const.GlobalConstants.FIRST_POSITION_IN_LIST]
+                self.parameterValue = self.temp[const.GlobalConstants.FIRST_POSITION_IN_LIST]
                 exhaustedOptions = True
             else:#the list has more than one parameters remaining
                 if previousResultWasGood:#the previous parameter returned, resulted in a good quality video
@@ -43,10 +45,10 @@ class Parameter:
                 else:
                     self.temp = self.temp[:self.index] #slice list from the start to just before the previous index to try out a better parameter
                 self._moveIndexToMiddleOfList() #move the index to the middle of the newly sliced smaller list
-                parameterValue = self.temp[self.index] #new parameter value
+                self.parameterValue = self.temp[self.index] #new parameter value
         if len(self.temp) <= 2:#if there are 2 or less items in the list
             exhaustedOptions = True                
-        return parameterValue, exhaustedOptions          
+        return exhaustedOptions          
 
     def _moveIndexToMiddleOfList(self): #if list is empty (which it shouldn't ever be, this function will throw an error)
         self.index = int(len(self.temp) / 2)
@@ -54,25 +56,41 @@ class Parameter:
     def reset(self):
         self.temp = self.values[:]
         self.index = None
+        if self.nextParameter:#reset all next parameters in the chain
+            self.nextParameter.reset()
         
     def getParameterName(self):
         return self.name
+    
+    def getParameterNameAndValue(self):
+        return self.name, self.parameterValue
     
 #-------------------------------------------------------
 #--- Selectors. Helps with selecting encoding parameters
 #-------------------------------------------------------
 class BinarySearchSelector:
     def __init__(self):        
-        self.parameters = [] 
-        self.parameters.append(Parameter(const.EncodingParameters.PRESET, const.EncodingParameters.preset_values))
-        self.parameters.append(Parameter(const.EncodingParameters.CRF, const.EncodingParameters.CRF_values))
+        # self.parameters = [] 
+        # self.parameters.append(Parameter(const.EncodingParameters.PRESET, const.EncodingParameters.preset_values))
+        # self.parameters.append(Parameter(const.EncodingParameters.CRF, const.EncodingParameters.CRF_values))
+        self.param = Parameter(None, const.EncodingParameters.CRF, const.EncodingParameters.CRF_values)
+        self.param = Parameter(self.param, const.EncodingParameters.PRESET, const.EncodingParameters.preset_values)
         self.selectedParameters = dict() #From Python 3.6 onwards, the standard dict type maintains insertion order by default.
+        self.nothingMoreToProcess = False
     
     def getParameters(self, previousResultWasGood):#should return an empty dict if no more parameters are there to process
-        for parameter in self.parameters:#TODO: needs to be more elaborate
-            parameterValue, areOptionsExhausted = parameter.getNewParameterValue(previousResultWasGood)
-            self.selectedParameters[parameter.getParameterName()] = str(parameterValue)
+        if self.nothingMoreToProcess:
+            self.selectedParameters = None
+        else:
+            areOptionsExhausted = self.param.createNewParameterValue(previousResultWasGood)
+            if areOptionsExhausted:
+                self.nothingMoreToProcess = True
         return self.selectedParameters
+    
+        # for parameter in self.parameters:#TODO: needs to be more elaborate
+        #     parameterValue, areOptionsExhausted = parameter.getNewParameterValue(previousResultWasGood)
+        #     self.selectedParameters[parameter.getParameterName()] = str(parameterValue)
+        # return self.selectedParameters
 
 
 class EvolutionarySearchSelector: #another way of selecting parameters
@@ -98,7 +116,7 @@ class Profiler:
     def startTrials(self, videoFile): #tries various FFMPEG parameters for this video 
         logging.info(f"\n\nStarting trials for video: {videoFile}")
         self.currentParameters = self.parameterSelector.getParameters(self.earlierEncodingTrialResultWasGood) #will return an empty string if no more parameters are generated
-        while self.currentParameters:
+        while self.currentParameters: #while it is not None
             self._beginEncoding(videoFile)
             self.currentParameters = self.parameterSelector.getParameters(self.earlierEncodingTrialResultWasGood)
     
