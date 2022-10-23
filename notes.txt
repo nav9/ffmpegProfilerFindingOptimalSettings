@@ -9,6 +9,7 @@ ffmpeg version 2.8.17-0ubuntu0.1
 
 Reference:
 ---
+* Sample videos: https://filesamples.com/formats/mkv
 * FFMPEG man page `man ffmpeg`.
 * Encoding on x86 vs. ARM: Mathá, Roland, et al. "Where to Encode: A Performance Analysis of x86 and Arm-based Amazon EC2 Instances." 2021 IEEE 17th International Conference on eScience (eScience). IEEE, 2021.
 * FFMPEG H.264 video encoding guide: https://trac.ffmpeg.org/wiki/Encode/H.264

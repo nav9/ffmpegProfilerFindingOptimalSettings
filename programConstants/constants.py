@@ -5,8 +5,7 @@ class GlobalConstants:
     encodedVideoFilesFolder = os.path.join("encoded", "") #The quotes at the end add an OS-specific folder slash
     FIRST_POSITION_IN_LIST = 0
     supportedFormats = ['.mkv']
-    reportFolder = "reports"
-    
+    reportFolder = "reports"    
 
 class EncodingParameters:
     #MINIMUM_CRF = 0 # 0 is lossless (for 8 bit only, for 10 bit use -qp 0). 23 is the default

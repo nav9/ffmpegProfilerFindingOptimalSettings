@@ -68,8 +68,7 @@ class BinarySearchSelector:
         self.parameters.append(Parameter(const.EncodingParameters.CRF, const.EncodingParameters.CRF_values))
         self.selectedParameters = dict() #From Python 3.6 onwards, the standard dict type maintains insertion order by default.
     
-    def getParameters(self):#should return an empty dict if no more parameters are there to process
-        previousResultWasGood = None
+    def getParameters(self, previousResultWasGood):#should return an empty dict if no more parameters are there to process
         for parameter in self.parameters:#TODO: needs to be more elaborate
             parameterValue, areOptionsExhausted = parameter.getNewParameterValue(previousResultWasGood)
             self.selectedParameters[parameter.getParameterName()] = str(parameterValue)
@@ -94,13 +93,14 @@ class Profiler:
         self.capturedData = dict() #could also have this as a class     
         self.numberOfCPUs = psutil.cpu_count(logical = True) #os.cpu_count() 
         self.originalFileSize = None  
+        self.earlierEncodingTrialResultWasGood = None #The User was satisfied with the previous trial of a video's encoding
         
     def startTrials(self, videoFile): #tries various FFMPEG parameters for this video 
         logging.info(f"\n\nStarting trials for video: {videoFile}")
-        self.currentParameters = self.parameterSelector.getParameters() #will return an empty string if no more parameters are generated
+        self.currentParameters = self.parameterSelector.getParameters(self.earlierEncodingTrialResultWasGood) #will return an empty string if no more parameters are generated
         while self.currentParameters:
             self._beginEncoding(videoFile)
-            self.currentParameters = self.parameterSelector.getParameters()
+            self.currentParameters = self.parameterSelector.getParameters(self.earlierEncodingTrialResultWasGood)
     
     def _beginEncoding(self, originalFile):
         self.originalFileSize = self.fileOps.getFileSize(originalFile)
@@ -114,12 +114,12 @@ class Profiler:
         outputFilename = ""
         for name, value in self.currentParameters.items(): #From Python 3.6 onwards, the standard dict type maintains insertion order by default.
             outputFilename += f"{name}{value}_"
-            parameters += f" {name} {value} " #Note: the spaces are important
-        
+            parameters += f" {name} {value} " #Note: the spaces are important        
         outputFilename += ".mp4" #TODO: add proper extension
         outputFilename = os.path.join(folderForThisVideo, outputFilename)
+        
         command = shlex.split(f"ffmpeg -y -i {originalFile} -c:a copy -c:v libx264 {parameters} {outputFilename}")       
-        #---Run command https://stackoverflow.com/questions/4256107/running-bash-commands-in-python
+        #---Run encoding command https://stackoverflow.com/questions/4256107/running-bash-commands-in-python
         logging.info("\n---------------------\n--- NEW RUN\n---------------------")
         logging.info(f"Running: {command}")
         try:
@@ -132,7 +132,8 @@ class Profiler:
             processStartTime = ffmpegProcessRepresentation.create_time()
             processEndTime = processStartTime
             logging.info(f"Process start time: {processStartTime}")
-            while True: #keep polling and profiling
+            #---keep polling and profiling
+            while True: 
                 returnCode = ffmpegProcess.poll() #checking if process ended (could also use psutil to check)
                 if returnCode == None: #process still running
                     try:
@@ -177,12 +178,13 @@ class Profiler:
         self.capturedData[const.ProfiledData.ENCODING_TIME] = encodingEndTime - self.capturedData[const.ProfiledData.ENCODING_START_TIME]        
         self.capturedData[const.ProfiledData.VIDEO_DURATION] = self.getVideoDuration(self.capturedData[const.ProfiledData.VIDEO_NAME_WITH_PATH])
         self.capturedData[const.ProfiledData.GENERATED_FILE_SIZE] = self.fileOps.getFileSize(self.capturedData[const.ProfiledData.VIDEO_NAME_WITH_PATH])
-        self.capturedData[const.ProfiledData.CPU_TIME] = numpy.mean(self.capturedData[const.ProfiledData.CPU_TIME])
+        self.capturedData[const.ProfiledData.CPU_TIME] = sum(self.capturedData[const.ProfiledData.CPU_TIME])
         self.capturedData[const.ProfiledData.MEMORY_CONSUMED] = numpy.mean(self.capturedData[const.ProfiledData.MEMORY_CONSUMED])
         #---Determine if video quality is acceptable
-        videoQualityIsGood = self._isEncodedVideoGoodEnough()
-        self.capturedData[const.ProfiledData.VIDEO_QUALITY] = videoQualityIsGood
+        self.earlierEncodingTrialResultWasGood = self._isEncodedVideoGoodEnough()
+        self.capturedData[const.ProfiledData.VIDEO_QUALITY] = self.earlierEncodingTrialResultWasGood
         
+    #TODO: Replace this function with an automated video quality and filesize Pareto assessment
     def _isEncodedVideoGoodEnough(self):
         print(f"\n\n\nOriginal video: {self.capturedData[const.ProfiledData.ORIGINAL_VIDEO_NAME_WITH_PATH]}")
         print(f"File size: {self.originalFileSize}")
@@ -190,6 +192,7 @@ class Profiler:
         print(f"File size: {self.capturedData[const.ProfiledData.GENERATED_FILE_SIZE]}")
         print("Please view the encoded video. Are you happy with the quality and file size?")
         print("Selecting 'y' will try another encoding with worse parameters. Selecting 'n' will try encoding with better parameters.")
+        self._notifyUserUsingSound()
         videoIsGood = None
         while videoIsGood == None:
             input("Are you happy with the video? [y/n] (simply press Enter for 'y')")
@@ -205,5 +208,8 @@ class Profiler:
     def getVideoDuration(self, filenameWithPath): #TODO: Could also use `pip install ffprobe-python`
         result = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", filenameWithPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         return float(result.stdout)
+    
+    def _notifyUserUsingSound(self):
+        pass #TODO: play sound
     
     
