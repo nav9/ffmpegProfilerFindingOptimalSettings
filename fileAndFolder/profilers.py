@@ -138,17 +138,13 @@ class Profiler:
         except subprocess.CalledProcessError as e:
             logging.error(f"The encoding ran into some errors: {e}") #TODO: handle this elegantly
         
-        
+
     def _performProfiling(self, processRepresentation): #https://stackoverflow.com/questions/70724655/how-to-get-ram-and-cpu-time-consumption-python-app-on-linux
         with processRepresentation.oneshot():
-            while processRepresentation.status() == 'running':
-                print(f"Name: {processRepresentation.name()}")  # execute internal routine once collecting multiple info
-                print(f"CPU Time:{processRepresentation.cpu_times()}")  # return cached value
-                print(f"Memory: {processRepresentation.memory_info().vms}")  # return cached value
-                print(f"CPU Percent: {processRepresentation.cpu_percent()}")  # return cached value
-                print(f"Creation time: {processRepresentation.create_time()}")  # return cached value
-                print(f"ppid: {processRepresentation.ppid()}")  # return cached value
-                print(f"status: {processRepresentation.status()}")  # return cached value
+            if processRepresentation.is_running():
+                logging.info(f"Name: {processRepresentation.name()}, CPU Time: {processRepresentation.cpu_times()}, Memory: {processRepresentation.memory_info().vms}, CPU Percent: {processRepresentation.cpu_percent()}") 
+                #logging.info(f"Creation time: {processRepresentation.create_time()}")  # return cached value
+                #logging.info(f"status: {processRepresentation.status()}")  # return cached value
         time.sleep(10)
         
     
