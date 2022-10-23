@@ -2,6 +2,7 @@
 originals/
 reports/
 *.log
+*.log.[0-9]*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
