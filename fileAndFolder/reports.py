@@ -20,6 +20,11 @@ class Reports:
         self.folderToStore = folderToStore
         self.report = []
         self.reportFilenameWithPath = 'None'
+        
+    def addDictDataToReport(self, data):
+        for key, value in data.items():
+            self.add(f"{key}: {value}")
+        self.add("--------------------------------------------")
     
     def add(self, text):
         self.report.append(text)

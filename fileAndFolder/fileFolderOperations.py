@@ -67,6 +67,9 @@ class FileOperations:
     def getFilenameAndExtension(self, filenameOrPathWithFilename):
         filename, fileExtension = os.path.splitext(filenameOrPathWithFilename)
         return filename, fileExtension.lower()
+    
+    def getFileSize(self, filenameWithPath):
+        return os.path.getsize(filenameWithPath)
         
     def writeLinesToFile(self, filenameWithPath, linesToWrite):#linesToWrite can be a list or set
         fileHandle = open(filenameWithPath, 'w')

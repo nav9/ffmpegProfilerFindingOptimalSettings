@@ -2,6 +2,7 @@
 originals/
 reports/
 *.log
+#ignore log files ending with numbers
 *.log.[0-9]*
 
 # Byte-compiled / optimized / DLL files

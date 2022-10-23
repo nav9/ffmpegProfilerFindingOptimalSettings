@@ -1,8 +1,10 @@
 import os
 import time
-import shlex
+import shlex #useful for recognizing quotes inside a command to be split
+import numpy
 import psutil
 import subprocess
+from collections import deque
 import logging
 from logging.handlers import RotatingFileHandler
 from programConstants import constants as const
@@ -78,7 +80,7 @@ class EvolutionarySearchSelector: #another way of selecting parameters
     def __init__(self):
         pass
         
-
+        
 #-------------------------------------------------------
 #--- Profiling engine. Starts and monitors encoding
 #-------------------------------------------------------    
@@ -89,8 +91,11 @@ class Profiler:
         self.parameterSelector = BinarySearchSelector() #TODO: could pass this as a parameter to decouple
         self.currentParameters = None
         self.bestParametersSoFar = None #parameters approved by the User or video quality evaluation function
+        self.capturedData = dict() #could also have this as a class     
+        self.numberOfCPUs = psutil.cpu_count(logical = True) #os.cpu_count() 
+        self.originalFileSize = None  
         
-    def startTrials(self, videoFile):
+    def startTrials(self, videoFile): #tries various FFMPEG parameters for this video 
         logging.info(f"\n\nStarting trials for video: {videoFile}")
         self.currentParameters = self.parameterSelector.getParameters() #will return an empty string if no more parameters are generated
         while self.currentParameters:
@@ -98,6 +103,7 @@ class Profiler:
             self.currentParameters = self.parameterSelector.getParameters()
     
     def _beginEncoding(self, originalFile):
+        self.originalFileSize = self.fileOps.getFileSize(originalFile)
         self.fileOps.createDirectoryIfNotExisting(const.GlobalConstants.encodedVideoFilesFolder)
         #---create a folder to store various encoded videos of this video
         videoName, extension = self.fileOps.getFilenameAndExtension(originalFile)
@@ -119,32 +125,85 @@ class Profiler:
         try:
             #process = subprocess.run(command, stdout = subprocess.PIPE) #https://docs.python.org/3/library/subprocess.html#module-subprocess
             ffmpegProcess = subprocess.Popen(command) #https://stackoverflow.com/questions/636561/how-can-i-run-an-external-command-asynchronously-from-python
-            logging.info(f"Process id: {ffmpegProcess.pid}")            
+            self._resetCapturedData(originalFile, outputFilename, command, time.time()) #TODO: psutil can give a more accurate process start time
+            logging.info(f"Process id: {ffmpegProcess.pid}")                       
             #---Keep polling to check if the ffmpegProcess completed and perform profiling too
             ffmpegProcessRepresentation = psutil.Process(pid = ffmpegProcess.pid) #https://psutil.readthedocs.io/en/latest/index.html?highlight=oneshot#processes
-            processStartTime = ffmpegProcessRepresentation.create_time(); processEndTime = processStartTime
+            processStartTime = ffmpegProcessRepresentation.create_time()
+            processEndTime = processStartTime
             logging.info(f"Process start time: {processStartTime}")
-            while True:
-                returnCode = ffmpegProcess.poll()
+            while True: #keep polling and profiling
+                returnCode = ffmpegProcess.poll() #checking if process ended (could also use psutil to check)
                 if returnCode == None: #process still running
                     try:
                         self._performProfiling(ffmpegProcessRepresentation)
                     except (psutil.AccessDenied, psutil.NoSuchProcess) as e:
                         logging.error(f"Unable to profile this process: {e}")
                 else: #process completed
-                    processEndTime = int(time.time())
+                    processEndTime = time.time()
                     logging.info(f"Finished encoding {videoName}")
+                    self._recordFinalProfilingMetadata(processEndTime)
+                    self.report.addDictDataToReport(self.capturedData)
                     break
         except subprocess.CalledProcessError as e:
-            logging.error(f"The encoding ran into some errors: {e}") #TODO: handle this elegantly
+            logging.error(f"The encoding for {videoName} ran into some errors: {e}") #TODO: handle this more elegantly
         
 
     def _performProfiling(self, processRepresentation): #https://stackoverflow.com/questions/70724655/how-to-get-ram-and-cpu-time-consumption-python-app-on-linux
         with processRepresentation.oneshot():
             if processRepresentation.is_running():
-                logging.info(f"Name: {processRepresentation.name()}, CPU Time: {processRepresentation.cpu_times()}, Memory: {processRepresentation.memory_info().vms}, CPU Percent: {processRepresentation.cpu_percent()}") 
+                self._recordProfiledData(processRepresentation.cpu_times(), processRepresentation.memory_info().vms)
+                #logging.info(f"Name: {processRepresentation.name()}, CPU Time: {processRepresentation.cpu_times()}, Memory: {processRepresentation.memory_info().vms}, CPU Percent: {processRepresentation.cpu_percent()}, num cores: {self.numberOfCPUs}") 
                 #logging.info(f"Creation time: {processRepresentation.create_time()}")  # return cached value
                 #logging.info(f"status: {processRepresentation.status()}")  # return cached value
-        time.sleep(10)
+        time.sleep(const.ProfiledData.PROFILING_SLEEP_INTERVAL_SECONDS)
+
+    def _resetCapturedData(self, originalName, videoName, encodingCommand, encodingStartTime):
+        self.capturedData = dict()        
+        self.capturedData[const.ProfiledData.ORIGINAL_VIDEO_NAME_WITH_PATH] = originalName
+        self.capturedData[const.ProfiledData.VIDEO_NAME_WITH_PATH] = videoName
+        self.capturedData[const.ProfiledData.ENCODING_COMMAND] = encodingCommand
+        self.capturedData[const.ProfiledData.ENCODING_START_TIME] = encodingStartTime
+        self.capturedData[const.ProfiledData.CPU_TIME] = deque()
+        self.capturedData[const.ProfiledData.MEMORY_CONSUMED] = deque()
         
+    def _recordProfiledData(self, cpuTimes, memory):
+        self.capturedData[const.ProfiledData.CPU_TIME].append(cpuTimes.user) #TODO: check if other cpuTimes need to be captured
+        self.capturedData[const.ProfiledData.MEMORY_CONSUMED].append(memory)
+        
+    #TODO: take care of condition when there is some encoding error
+    def _recordFinalProfilingMetadata(self, encodingEndTime):
+        self.capturedData[const.ProfiledData.ENCODING_END_TIME] = encodingEndTime
+        self.capturedData[const.ProfiledData.ENCODING_TIME] = encodingEndTime - self.capturedData[const.ProfiledData.ENCODING_START_TIME]        
+        self.capturedData[const.ProfiledData.VIDEO_DURATION] = self.getVideoDuration(self.capturedData[const.ProfiledData.VIDEO_NAME_WITH_PATH])
+        self.capturedData[const.ProfiledData.GENERATED_FILE_SIZE] = self.fileOps.getFileSize(self.capturedData[const.ProfiledData.VIDEO_NAME_WITH_PATH])
+        self.capturedData[const.ProfiledData.CPU_TIME] = numpy.mean(self.capturedData[const.ProfiledData.CPU_TIME])
+        self.capturedData[const.ProfiledData.MEMORY_CONSUMED] = numpy.mean(self.capturedData[const.ProfiledData.MEMORY_CONSUMED])
+        #---Determine if video quality is acceptable
+        videoQualityIsGood = self._isEncodedVideoGoodEnough()
+        self.capturedData[const.ProfiledData.VIDEO_QUALITY] = videoQualityIsGood
+        
+    def _isEncodedVideoGoodEnough(self):
+        print(f"\n\n\nOriginal video: {self.capturedData[const.ProfiledData.ORIGINAL_VIDEO_NAME_WITH_PATH]}")
+        print(f"File size: {self.originalFileSize}")
+        print(f"Encoded video: {self.capturedData[const.ProfiledData.VIDEO_NAME_WITH_PATH]}")
+        print(f"File size: {self.capturedData[const.ProfiledData.GENERATED_FILE_SIZE]}")
+        print("Please view the encoded video. Are you happy with the quality and file size?")
+        print("Selecting 'y' will try another encoding with worse parameters. Selecting 'n' will try encoding with better parameters.")
+        videoIsGood = None
+        while videoIsGood == None:
+            input("Are you happy with the video? [y/n] (simply press Enter for 'y')")
+            if videoIsGood.lower() == 'y' or videoIsGood == '': #User pressed 'y' or Enter
+                videoIsGood = True
+                break
+            if videoIsGood.lower() == 'n':
+                videoIsGood = False
+            else:
+                videoIsGood = None #to loop back and ask the User again for a proper response
+        return videoIsGood
+    
+    def getVideoDuration(self, filenameWithPath): #TODO: Could also use `pip install ffprobe-python`
+        result = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", filenameWithPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        return float(result.stdout)
+    
     
