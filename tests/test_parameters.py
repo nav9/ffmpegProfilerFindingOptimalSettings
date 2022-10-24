@@ -98,3 +98,65 @@ class TestBinarySearchSelector:
         c = s.getParameters()
         shouldNowBe = None
         assert shouldNowBe == c                 
+        
+    def test_settingParameterRepeatedly(self):    
+        param1_name = "P1"
+        param1_values = ['a'] 
+        param2_name = "P2"
+        param2_values = [4, 7, 3]
+        param3_name = "P3"
+        param3_values = ['k', 'e', 't', 'a', 'p']         
+        p = None        
+        p = profilers.Parameter(p, param1_name, param1_values)
+        p = profilers.Parameter(p, param2_name, param2_values)  
+        p = profilers.Parameter(p, param3_name, param3_values)        
+        s = profilers.BinarySearchSelector(p) 
+        c = s.getParameters()
+        shouldNowBe = {param3_name: 't', param2_name: 7, param1_name: 'a'}
+        assert str(shouldNowBe) == str(c) #converted to str just to ensure it's an exact match even in terms of the sequence of keys and values
+        previousResultWasGood = True
+        s.setNewParameters(previousResultWasGood)
+        c = s.getParameters()
+        shouldNowBe = {param3_name: 't', param2_name: 3, param1_name: 'a'}
+        assert str(shouldNowBe) == str(c)
+        previousResultWasGood = False
+        s.setNewParameters(previousResultWasGood)
+        c = s.getParameters()
+        shouldNowBe = {param3_name: 'e', param2_name: 7, param1_name: 'a'}
+        assert str(shouldNowBe) == str(c)        
+        previousResultWasGood = False
+        s.setNewParameters(previousResultWasGood)
+        c = s.getParameters()
+        shouldNowBe = {param3_name: 'e', param2_name: 4, param1_name: 'a'}
+        assert str(shouldNowBe) == str(c)              
+        previousResultWasGood = False
+        s.setNewParameters(previousResultWasGood)
+        c = s.getParameters()
+        shouldNowBe = {param3_name: 'k', param2_name: 7, param1_name: 'a'}
+        assert str(shouldNowBe) == str(c)                  
+        previousResultWasGood = False
+        s.setNewParameters(previousResultWasGood)
+        c = s.getParameters()
+        shouldNowBe = {param3_name: 'k', param2_name: 4, param1_name: 'a'}
+        assert str(shouldNowBe) == str(c)                          
+        previousResultWasGood = False
+        s.setNewParameters(previousResultWasGood)
+        c = s.getParameters()
+        shouldNowBe = None
+        assert shouldNowBe == c         
+        
+    def test_singleParameter(self):    
+        param1_name = "P1"
+        param1_values = ['a']      
+        p = None        
+        p = profilers.Parameter(p, param1_name, param1_values)
+        s = profilers.BinarySearchSelector(p) 
+        c = s.getParameters()
+        shouldNowBe = {param1_name: 'a'}
+        assert str(shouldNowBe) == str(c)        
+        previousResultWasGood = False
+        s.setNewParameters(previousResultWasGood)
+        c = s.getParameters()
+        shouldNowBe = None
+        assert shouldNowBe == c          
+        
