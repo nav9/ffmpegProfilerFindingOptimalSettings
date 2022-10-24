@@ -102,6 +102,8 @@ class Parameter:
             self.midIndex = const.GlobalConstants.FIRST_POSITION_IN_LIST
             self.optionsExhausted = True
         else:
+            #print("right", self.rightIndex, "left", self.leftIndex, "mid", self.midIndex)
+            #print("int part", int((self.rightIndex - self.leftIndex) / 2))
             self.midIndex = self.leftIndex + int((self.rightIndex - self.leftIndex) / 2)
             if self.midIndex == self.leftIndex or self.midIndex == self.rightIndex:
                 self.optionsExhausted = True
@@ -126,6 +128,9 @@ class Parameter:
     def getParameterValue(self):
         return self.values[self.midIndex]  
     
+    def isThisParameterExhausted(self):
+        return self.optionsExhausted
+    
     def retrieveAllParameterNamesAndValues(self, dictReference):
         dictReference[self.name] = self.parameterValue
         if self.nextParameter:
@@ -134,7 +139,10 @@ class Parameter:
     def resetIndices(self):        
         self.leftIndex = const.GlobalConstants.FIRST_POSITION_IN_LIST        
         self.rightIndex = len(self.values) - 1 
-        self.midIndex = self._recalculateMidIndex()             
+        self._recalculateMidIndex() 
+        self.optionsExhausted = False  
+        if self.midIndex == self.leftIndex or self.midIndex == self.rightIndex:
+            self.optionsExhausted = True           
         
     def deepReset(self): #resets this and all lower elements in the chain
         self.resetIndices()
