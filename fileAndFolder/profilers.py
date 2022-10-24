@@ -132,9 +132,9 @@ class Parameter:
         return self.optionsExhausted
     
     def retrieveAllParameterNamesAndValues(self, dictReference):
-        dictReference[self.name] = self.parameterValue
+        dictReference[self.name] = self.getParameterValue()
         if self.nextParameter:
-            self.nextParameter.populateParameterNameAndValue(dictReference)
+            self.nextParameter.retrieveAllParameterNamesAndValues(dictReference)
         
     def resetIndices(self):        
         self.leftIndex = const.GlobalConstants.FIRST_POSITION_IN_LIST        
@@ -154,16 +154,14 @@ class Parameter:
         if self.nextParameter and self.optionsExhausted:#proceed only if there's a next element and if current value is True (because even a single False should return False)
             allDeeperElementsOptionsExhausted = self.nextParameter.deepExhaustionCheck()
         return allDeeperElementsOptionsExhausted
-                   
+
 #-------------------------------------------------------
 #--- Selectors. Helps with selecting encoding parameters
 #-------------------------------------------------------
 class BinarySearchSelector:
-    def __init__(self):        
+    def __init__(self, parameterChain):        
         #---Using Decorator Design Pattern to chain Parameter objects
-        self.param = None
-        self.param = Parameter(self.param, const.EncodingParameters.CRF, const.EncodingParameters.CRF_values)
-        self.param = Parameter(self.param, const.EncodingParameters.PRESET, const.EncodingParameters.preset_values)
+        self.param = parameterChain
         self.selectedParameters = dict() #From Python 3.6 onwards, the standard dict type maintains insertion order by default.
         self.nothingMoreToProcess = False
         self.param.retrieveAllParameterNamesAndValues(self.selectedParameters) #retrieve first chain of parameters. When Parameter is initialized, all indexes of parameter values will be at mid position
@@ -194,7 +192,10 @@ class Profiler:
     def __init__(self, fileOps, report):        
         self.fileOps = fileOps
         self.report = report
-        self.parameterSelector = BinarySearchSelector() #TODO: could pass this as a parameter to decouple
+        param = None
+        param = Parameter(param, const.EncodingParameters.CRF, const.EncodingParameters.CRF_values)
+        param = Parameter(param, const.EncodingParameters.PRESET, const.EncodingParameters.preset_values)        
+        self.parameterSelector = BinarySearchSelector(param) #TODO: could pass this as a parameter to decouple
         self.currentParameters = None
         self.bestParametersSoFar = None #parameters approved by the User or video quality evaluation function
         self.capturedData = dict() #could also have this as a class     
