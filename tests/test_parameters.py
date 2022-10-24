@@ -88,4 +88,13 @@ class TestBinarySearchSelector:
         c = s.getParameters()
         shouldNowBe = {param2_name: 'a', param1_name: 7}
         assert str(shouldNowBe) == str(c) 
-        
+        previousResultWasGood = False
+        s.setNewParameters(previousResultWasGood)
+        c = s.getParameters()
+        shouldNowBe = {param2_name: 'a', param1_name: 4}
+        assert str(shouldNowBe) == str(c)         
+        previousResultWasGood = False
+        s.setNewParameters(previousResultWasGood)
+        c = s.getParameters()
+        shouldNowBe = None
+        assert shouldNowBe == c                 
