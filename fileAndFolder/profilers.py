@@ -163,20 +163,23 @@ class Profiler:
             self.currentParameters = self.parameterSelector.getParameters()
         self.report.generateReport(True)
     
-    def _beginEncoding(self, originalFile):
-        self.summary = ""
+    def _beginEncoding(self, originalFile):        
         self.originalFileSize = self.fileOps.getFileSize(originalFile)
-        self.fileOps.createDirectoryIfNotExisting(const.GlobalConstants.encodedVideoFilesFolder)
+        self.fileOps.createDirectoryIfNotExisting(const.GlobalConstants.encodedVideoFilesFolder)        
         #---create a folder to store various encoded videos of this video
-        videoName, extension = self.fileOps.getFilenameAndExtension(originalFile)
-        folderForThisVideo = os.path.join(const.GlobalConstants.encodedVideoFilesFolder, videoName.split(os.path.sep)[const.GlobalConstants.SECOND_POSITION_IN_LIST], "")#the quotes in the end add a folder slash
+        videoNameWithPath, extension = self.fileOps.getFilenameAndExtension(originalFile)
+        videoName = videoNameWithPath.split(os.path.sep)[const.GlobalConstants.SECOND_POSITION_IN_LIST]        
+        folderForThisVideo = os.path.join(const.GlobalConstants.encodedVideoFilesFolder, videoName, "")#the quotes in the end add a folder slash        
         self.fileOps.createDirectoryIfNotExisting(folderForThisVideo)                
+        self._resetSummary(folderForThisVideo)
+        self._addToSummary(videoName)
         #---collect information to create the command for encoding
         parameters = ""
-        outputFilename = "o"
+        outputFilename = "o" #more info will be concatenated to this below
         for name, value in self.currentParameters.items(): #From Python 3.6 onwards, the standard dict type maintains insertion order by default.
             outputFilename += f"{name}{value}_"
-            parameters += f" {name} {value} " #Note: the spaces are important        
+            parameters += f" {name} {value} " #Note: the spaces are important    
+            self._addToSummary(f"{name}_{value}")
         outputFilename += ".mp4" #TODO: add proper extension
         outputFilename = os.path.join(folderForThisVideo, outputFilename)
         #---prepare the command
@@ -204,12 +207,12 @@ class Profiler:
                         logging.error(f"Unable to profile this process: {e}")
                 else: #process completed
                     processEndTime = time.time()
-                    logging.info(f"Finished encoding {videoName}")
+                    logging.info(f"Finished encoding {videoNameWithPath}")
                     self._recordFinalProfilingMetadata(processEndTime)
                     self.report.addDictDataToReport(self.capturedData)
                     break
         except subprocess.CalledProcessError as e:
-            logging.error(f"The encoding for {videoName} ran into some errors: {e}") #TODO: handle this more elegantly
+            logging.error(f"The encoding for {videoNameWithPath} ran into some errors: {e}") #TODO: handle this more elegantly
         
 
     def _performProfiling(self, processRepresentation): #https://stackoverflow.com/questions/70724655/how-to-get-ram-and-cpu-time-consumption-python-app-on-linux
@@ -245,6 +248,13 @@ class Profiler:
         #---Determine if video quality is acceptable
         self.earlierEncodingTrialResultWasGood = self._isEncodedVideoGoodEnough()
         self.capturedData[const.ProfiledData.VIDEO_QUALITY] = self.earlierEncodingTrialResultWasGood
+        self._addToSummary(f"timeToEncode_{self.capturedData[const.ProfiledData.ENCODING_TIME]}")
+        self._addToSummary(f"CPU_{self.capturedData[const.ProfiledData.CPU_TIME]}")        
+        self._addToSummary(f"memory_{self.capturedData[const.ProfiledData.MEMORY_CONSUMED]}")
+        self._addToSummary(f"size_{self.capturedData[const.ProfiledData.GENERATED_FILE_SIZE]}")
+        self._addToSummary(f"duration_{self.capturedData[const.ProfiledData.VIDEO_DURATION]}")
+        self._addToSummary(f"quality_{self.capturedData[const.ProfiledData.VIDEO_QUALITY]}")
+        self._appendSummaryToFile()
         
     #TODO: Replace this function with an automated video quality and filesize Pareto assessment
     def _isEncodedVideoGoodEnough(self):
@@ -263,15 +273,15 @@ class Profiler:
             print("Press 'n' for No.")
             print("Press 'a' to abort more encoding trials for this video. This assumes you aren't happy with the video.")
             videoIsGood = input("Your response? ")
-            videoIsGood = videoIsGood.lower()
+            videoIsGood = videoIsGood.strip().lower()
             if videoIsGood == 'y' or videoIsGood == '': #User pressed 'y' or Enter
                 videoIsGood = True
                 break
-            if videoIsGood == 'n': videoIsGood = False
-            else: videoIsGood = None #to loop back and ask the User again for a proper response
+            if videoIsGood == 'n': videoIsGood = False            
             if videoIsGood == 'a': 
                 self.abort = True
                 videoIsGood = False
+            else: videoIsGood = None #to loop back and ask the User again for a proper response
         return videoIsGood
     
     def getVideoDuration(self, filenameWithPath): #TODO: Could also use `pip install ffprobe-python`
@@ -281,4 +291,12 @@ class Profiler:
     def _notifyUserUsingSound(self):
         pass #TODO: play sound
     
+    def _resetSummary(self, videoFolder):
+        self.summary = ""
+        self.report.setSummaryFileWithPath(os.path.join(videoFolder, const.GlobalConstants.summaryFilename))
     
+    def _addToSummary(self, info):
+        self.summary += f"{info}, "
+        
+    def _appendSummaryToFile(self):
+        self.report.appendSummary(self.summary)

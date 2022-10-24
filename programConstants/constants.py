@@ -3,7 +3,7 @@ import os
 class GlobalConstants:
     originalVideoFilesFolder = os.path.join("originals", "") #The quotes at the end add an OS-specific folder slash
     encodedVideoFilesFolder = os.path.join("encoded", "") #The quotes at the end add an OS-specific folder slash
-    summaryFile = os.path.join(encodedVideoFilesFolder, "summary.txt")
+    summaryFilename = "summary.txt"
     FIRST_POSITION_IN_LIST = 0
     SECOND_POSITION_IN_LIST = 1
     supportedFormats = ['.mkv']

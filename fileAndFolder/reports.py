@@ -19,7 +19,8 @@ class Reports:
         self.fileOps = fileOps
         self.folderToStore = folderToStore
         self.report = []
-        self.reportFilenameWithPath = 'None'
+        self.reportFilenameWithPath = 'None' #TBD: why is this in quotes?
+        self.summaryFilenameWithPath = None
         
     def addDictDataToReport(self, data):
         for key, value in data.items():
@@ -37,4 +38,11 @@ class Reports:
             self.reportFilenameWithPath = os.path.join(self.folderToStore, "Report_" + str(datetime.datetime.now()) + ".txt")
             self.fileOps.writeLinesToFile(self.reportFilenameWithPath, self.report)
         logging.info(f'Completed. Report: {self.reportFilenameWithPath}')            
+        
+    def setSummaryFileWithPath(self, summaryFilenameWithPath):
+        self.summaryFilenameWithPath = summaryFilenameWithPath
+        
+    def appendSummary(self, summaryString):
+        self.fileOps.appendLinesToFileCreateIfNotExisting(self.summaryFilenameWithPath, [summaryString])
+        
         

@@ -77,6 +77,16 @@ class FileOperations:
             fileHandle.write(line)
             fileHandle.write("\n")
         fileHandle.close()
+
+    def appendLinesToFileCreateIfNotExisting(self, filenameWithPath, linesToWrite):#linesToWrite can be a list or set
+        if not self.isValidFile(filenameWithPath):
+            fileHandle = open(filenameWithPath, 'w')
+            fileHandle.close()        
+        fileHandle = open(filenameWithPath, 'a')
+        for line in linesToWrite:
+            fileHandle.write(line)
+            fileHandle.write("\n")
+        fileHandle.close()        
         
     def writeKeysOfDictToFile(self, filenameWithPath, dictReference):
         fileHandle = open(filenameWithPath, 'w')
@@ -104,14 +114,6 @@ class FileOperations:
                 break #exit for loop
             lines.append(line)
         return lines #if lines is empty, we've reached the end of the file
-    
-    # def getChunksOfLinesFromTextFile(self, filenameWithPath):
-    #     lines = []
-    #     with open(...) as fileHandle:
-    #         while True:
-    #             nLines = list(islice(fileHandle, self.LINES_TO_READ_AT_ONCE))
-    #             if not nLines:#reached end of file
-    #                 break
     
     def createDirectoryIfNotExisting(self, folder):
         if not os.path.exists(folder): 
