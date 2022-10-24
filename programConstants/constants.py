@@ -5,6 +5,7 @@ class GlobalConstants:
     encodedVideoFilesFolder = os.path.join("encoded", "") #The quotes at the end add an OS-specific folder slash
     summaryFile = os.path.join(encodedVideoFilesFolder, "summary.txt")
     FIRST_POSITION_IN_LIST = 0
+    SECOND_POSITION_IN_LIST = 1
     supportedFormats = ['.mkv']
     reportFolder = "reports"    
 

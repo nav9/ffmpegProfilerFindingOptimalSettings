@@ -19,6 +19,9 @@ handler.formatter = logging.Formatter(fmt='%(levelname)s %(asctime)s - %(message
 logging.getLogger().addHandler(handler)
 logging.getLogger().setLevel(loggingLevel)
         
+#-------------------------------------------------------
+#--- Provides flexibility of adding more parameters and bisecting them without hassles
+#-------------------------------------------------------        
 class Parameter:
     def __init__(self, nextParameter, parameterName, parameterValues):
         self.nextParameter = nextParameter #the next parameter in the chain of parameters. This will be None at the end of the chain
@@ -40,17 +43,10 @@ class Parameter:
         
     def createNewParameterValue(self, previousResultWasGood):#This function should not be called without a reset, once exhaustedOptions is True
         if self.deepExhaustionCheck(self.name):
-            if previousResultWasGood:                
-                self._moveLeftIndexToMid()
-                print(f"{self.name} Moved left index. mid index is now {self.midIndex} for {self.values}")
-            else:
-                self._moveRightIndexToMid()
-                print(f"{self.name} Moved right index. mid index is now {self.midIndex} for {self.values}")
-            if self.nextParameter:
-                print(f"initiating deep reset at {self.name} {self.values}")                
-                self.deepReset(self.name)#reset all child Parameters in the chain
+            if previousResultWasGood: self._moveLeftIndexToMid()
+            else: self._moveRightIndexToMid()
+            if self.nextParameter: self.deepReset(self.name)#reset all child Parameters in the chain
         else:
-            print(f"Going deeper from {self.name}")
             self.nextParameter.createNewParameterValue(previousResultWasGood)
     
     def _recalculateMidIndex(self):
@@ -60,28 +56,21 @@ class Parameter:
         else:
             self.midIndex = self.leftIndex + int((self.rightIndex - self.leftIndex) / 2)
             if self.midIndex == self.leftIndex or self.midIndex == self.rightIndex:
-                print(f"Marking options exhausted in {self.name}")
                 self.optionsExhausted = True
 
     def _moveLeftIndexToMid(self):#when result is good
-        print(f"Moving left index to mid for {self.name}")
         self.leftIndex = self.midIndex        
         self._recalculateMidIndex()
-        print(f"left {self.leftIndex}, mid {self.midIndex}, right {self.rightIndex}")
         if self.leftIndex == self.midIndex: #if even mid recalculation caused mid not to move, it's because the options are down to 2
             self.midIndex += 1 #since mid index didn't move during recalculateMidIndex, manually move it to the only remaining option
             self.optionsExhausted = True
-            print(f"Marking options exhausted in {self.name}")
         
     def _moveRightIndexToMid(self):#when result is bad
-        print(f"Moving right index to mid for {self.name}")
         self.rightIndex = self.midIndex
         self._recalculateMidIndex()        
-        print(f"left {self.leftIndex}, mid {self.midIndex}, right {self.rightIndex}")
         if self.rightIndex == self.midIndex: #if even mid recalculation caused mid not to move, it's because the options are down to 2
             self.midIndex -= 1 #since mid index didn't move during recalculateMidIndex, manually move it to the only remaining option
             self.optionsExhausted = True
-            print(f"Marking options exhausted in {self.name}")
     
     def retrieveAllParameterNamesAndValues(self, dictReference):
         dictReference[self.name] = self.values[self.midIndex]
@@ -97,7 +86,6 @@ class Parameter:
             self.optionsExhausted = True           
         
     def deepReset(self, invoker): #resets this and all lower elements in the chain
-        print(f"Resetting everything below {self.name}")
         if self.name != invoker:
             self.resetIndices()
         if self.nextParameter:#reset all next parameters in the chain
@@ -162,32 +150,36 @@ class Profiler:
         self.numberOfCPUs = psutil.cpu_count(logical = True) #os.cpu_count() 
         self.originalFileSize = None  
         self.earlierEncodingTrialResultWasGood = None #The User was satisfied with the previous trial of a video's encoding
+        self.abort = False
+        self.summary = "" #summary info of an encoding that will be written to report later
         
     def startTrials(self, videoFile): #tries various FFMPEG parameters for this video 
         logging.info(f"\n\nStarting trials for video: {videoFile}")
         self.currentParameters = self.parameterSelector.getParameters() #will return None if no more parameters are there to try
-        while self.currentParameters: #while it is not None (all options are not exhausted yet)
+        while self.currentParameters and self.abort == False: #while it is not None (all options are not exhausted yet) and the User didn't choose to abort
             logging.info(f"Current parameters: {self.currentParameters}")
             self._beginEncoding(videoFile)
             self.parameterSelector.setNewParameters(self.earlierEncodingTrialResultWasGood)
             self.currentParameters = self.parameterSelector.getParameters()
+        self.report.generateReport(True)
     
     def _beginEncoding(self, originalFile):
+        self.summary = ""
         self.originalFileSize = self.fileOps.getFileSize(originalFile)
         self.fileOps.createDirectoryIfNotExisting(const.GlobalConstants.encodedVideoFilesFolder)
         #---create a folder to store various encoded videos of this video
         videoName, extension = self.fileOps.getFilenameAndExtension(originalFile)
-        folderForThisVideo = os.path.join(const.GlobalConstants.encodedVideoFilesFolder, videoName, "")#the quotes in the end add a folder slash
-        self.fileOps.createDirectoryIfNotExisting(folderForThisVideo)        
-        #---create the command for encoding
+        folderForThisVideo = os.path.join(const.GlobalConstants.encodedVideoFilesFolder, videoName.split(os.path.sep)[const.GlobalConstants.SECOND_POSITION_IN_LIST], "")#the quotes in the end add a folder slash
+        self.fileOps.createDirectoryIfNotExisting(folderForThisVideo)                
+        #---collect information to create the command for encoding
         parameters = ""
-        outputFilename = ""
+        outputFilename = "o"
         for name, value in self.currentParameters.items(): #From Python 3.6 onwards, the standard dict type maintains insertion order by default.
             outputFilename += f"{name}{value}_"
             parameters += f" {name} {value} " #Note: the spaces are important        
         outputFilename += ".mp4" #TODO: add proper extension
         outputFilename = os.path.join(folderForThisVideo, outputFilename)
-        
+        #---prepare the command
         command = shlex.split(f"ffmpeg -y -i {originalFile} -c:a copy -c:v libx264 {parameters} {outputFilename}")       
         #---Run encoding command https://stackoverflow.com/questions/4256107/running-bash-commands-in-python
         logging.info("\n---------------------\n--- NEW RUN\n---------------------")
@@ -257,22 +249,29 @@ class Profiler:
     #TODO: Replace this function with an automated video quality and filesize Pareto assessment
     def _isEncodedVideoGoodEnough(self):
         print(f"\n\n\nOriginal video: {self.capturedData[const.ProfiledData.ORIGINAL_VIDEO_NAME_WITH_PATH]}")
-        print(f"File size: {self.originalFileSize}")
         print(f"Encoded video: {self.capturedData[const.ProfiledData.VIDEO_NAME_WITH_PATH]}")
-        print(f"File size: {self.capturedData[const.ProfiledData.GENERATED_FILE_SIZE]}")
+        print(f"Original: File size: {self.originalFileSize}")        
+        print(f"Encoded: File size: {self.capturedData[const.ProfiledData.GENERATED_FILE_SIZE]}, time to encode: {self.capturedData[const.ProfiledData.ENCODING_TIME]}, CPU: {self.capturedData[const.ProfiledData.CPU_TIME]}")
+        if self.originalFileSize > self.capturedData[const.ProfiledData.GENERATED_FILE_SIZE]: print("Encoded file is smaller")
         print("Please view the encoded video. Are you happy with the quality and file size?")
         print("Selecting 'y' will try another encoding with worse parameters. Selecting 'n' will try encoding with better parameters.")
         self._notifyUserUsingSound()
         videoIsGood = None
         while videoIsGood == None:
-            videoIsGood = input("Are you happy with the video? [y/n] (simply press Enter for 'y') ")
-            if videoIsGood.lower() == 'y' or videoIsGood == '': #User pressed 'y' or Enter
+            print("Are you happy with the encoded video (quality, fileSize and CPU consumption)?")
+            print("Press 'y' for Yes (or simply press Enter).")
+            print("Press 'n' for No.")
+            print("Press 'a' to abort more encoding trials for this video. This assumes you aren't happy with the video.")
+            videoIsGood = input("Your response? ")
+            videoIsGood = videoIsGood.lower()
+            if videoIsGood == 'y' or videoIsGood == '': #User pressed 'y' or Enter
                 videoIsGood = True
                 break
-            if videoIsGood.lower() == 'n':
+            if videoIsGood == 'n': videoIsGood = False
+            else: videoIsGood = None #to loop back and ask the User again for a proper response
+            if videoIsGood == 'a': 
+                self.abort = True
                 videoIsGood = False
-            else:
-                videoIsGood = None #to loop back and ask the User again for a proper response
         return videoIsGood
     
     def getVideoDuration(self, filenameWithPath): #TODO: Could also use `pip install ffprobe-python`

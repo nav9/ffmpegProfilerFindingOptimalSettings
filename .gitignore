@@ -1,5 +1,6 @@
 # Custom 
 originals/
+encoded/
 reports/
 *.log
 #ignore log files ending with numbers

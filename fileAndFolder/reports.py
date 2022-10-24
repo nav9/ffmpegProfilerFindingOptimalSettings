@@ -13,7 +13,7 @@ handler = RotatingFileHandler(logFileName, maxBytes=2000000, backupCount=2)#TODO
 handler.formatter = logging.Formatter(fmt='%(levelname)s %(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S') #setting this was necessary to get it to write the format to file. Without this, only the message part of the log would get written to the file
 logging.getLogger().addHandler(handler)
 logging.getLogger().setLevel(loggingLevel)
-      
+
 class Reports:
     def __init__(self, folderToStore, fileOps):
         self.fileOps = fileOps
