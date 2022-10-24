@@ -9,7 +9,7 @@ class TestPrameterFunctionality:
         p = profilers.Parameter(None, parameterName, parameterValues)  
         previousResultWasGood = None                      
         exhaustedOptions = p.createNewParameterValue(previousResultWasGood)
-        _, val = p.getParameterNameAndValue()
+        val = p.getParameterValue()
         assert 3 == val
         assert exhaustedOptions == False
         
@@ -19,7 +19,7 @@ class TestPrameterFunctionality:
         p = profilers.Parameter(None, parameterName, parameterValues)  
         previousResultWasGood = None                      
         exhaustedOptions = p.createNewParameterValue(previousResultWasGood)
-        _, val = p.getParameterNameAndValue()
+        val = p.getParameterValue()
         assert 3 == val
         assert exhaustedOptions == False
         
@@ -29,7 +29,7 @@ class TestPrameterFunctionality:
         p = profilers.Parameter(None, parameterName, parameterValues)  
         previousResultWasGood = None                      
         exhaustedOptions = p.createNewParameterValue(previousResultWasGood)
-        _, val = p.getParameterNameAndValue()
+        val = p.getParameterValue()
         assert 1 == val
         assert exhaustedOptions == True
     
@@ -39,19 +39,19 @@ class TestPrameterFunctionality:
         p = profilers.Parameter(None, parameterName, parameterValues)  
         previousResultWasGood = None          
         exhaustedOptions = p.createNewParameterValue(previousResultWasGood) #val would be 3
-        _, val = p.getParameterNameAndValue()
+        val = p.getParameterValue()
         previousResultWasGood = False #not happy with 3
         exhaustedOptions = p.createNewParameterValue(previousResultWasGood) #list should now be shrunk to [1, 2]        
-        _, val = p.getParameterNameAndValue()
+        val = p.getParameterValue()
         assert 2 == val
         assert exhaustedOptions == True
         p.reset() #list will be back to [1, 2, 3, 4]
         previousResultWasGood = None          
         exhaustedOptions = p.createNewParameterValue(previousResultWasGood) #val would be 3
-        _, val = p.getParameterNameAndValue()
+        val = p.getParameterValue()
         previousResultWasGood = True #happy with 3
         exhaustedOptions = p.createNewParameterValue(previousResultWasGood) #list should now be shrunk to [3, 4]        
-        _, val = p.getParameterNameAndValue()
+        val = p.getParameterValue()
         assert 4 == val
         assert exhaustedOptions == True        
         
