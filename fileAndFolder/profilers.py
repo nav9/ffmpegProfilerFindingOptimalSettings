@@ -18,60 +18,6 @@ handler = RotatingFileHandler(logFileName, maxBytes=2000000, backupCount=2)#TODO
 handler.formatter = logging.Formatter(fmt='%(levelname)s %(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S') #setting this was necessary to get it to write the format to file. Without this, only the message part of the log would get written to the file
 logging.getLogger().addHandler(handler)
 logging.getLogger().setLevel(loggingLevel)
-
-# class Parameter:
-#     def __init__(self, nextParameter, parameterName, parameterValues):
-#         self.name = parameterName
-#         if not parameterValues:#list is empty
-#             raise IndexError(f"{parameterName} has no corresponding values supplied")
-#         self.values = parameterValues
-#         self.temp = self.values[:] #copying values
-#         self.index = None
-#         self.parameterValue = None
-#         self.nextParameter = nextParameter
-    
-#     def createNewParameterValue(self, previousResultWasGood):#This function should not be called without a reset, once exhaustedOptions is True
-#         exhaustedOptions = False
-#         if previousResultWasGood == None: #being called the first time since a reset or initialization
-#             self._moveIndexToMiddleOfList()
-#             self.parameterValue = self.temp[self.index]            
-#         else:
-#             if len(self.temp) == 1:#the only parameter left. No more to bisect
-#                 self.parameterValue = self.temp[const.GlobalConstants.FIRST_POSITION_IN_LIST]
-#                 exhaustedOptions = True
-#             else:#the list has more than one parameters remaining
-#                 if previousResultWasGood:#the previous parameter returned, resulted in a good quality video
-#                     self.temp = self.temp[self.index:] #slice list from the previous index to the end of the list to try out a worse parameter
-#                 else:
-#                     self.temp = self.temp[:self.index] #slice list from the start to just before the previous index to try out a better parameter
-#                 self._moveIndexToMiddleOfList() #move the index to the middle of the newly sliced smaller list
-#                 self.parameterValue = self.temp[self.index] #new parameter value
-#         if len(self.temp) <= 2:#if there are 2 or less items in the list
-#             exhaustedOptions = True  
-#         #---continue the chain of calls
-#         if self.nextParameter:
-#             self.nextParameter.createNewParameterValue(previousResultWasGood)              
-#         return exhaustedOptions          
-
-#     def _moveIndexToMiddleOfList(self): #if list is empty (which it shouldn't ever be, this function will throw an error)
-#         self.index = int(len(self.temp) / 2)
-    
-#     def reset(self):
-#         self.temp = self.values[:]
-#         self.index = None
-#         if self.nextParameter:#reset all next parameters in the chain
-#             self.nextParameter.reset()
-        
-#     def getParameterName(self):
-#         return self.name
-    
-#     def getParameterValue(self):
-#         return self.parameterValue
-    
-#     def retrieveAllParameterNamesAndValues(self, containerReference):
-#         containerReference[self.name] = self.parameterValue
-#         if self.nextParameter:
-#             self.nextParameter.populateParameterNameAndValue(containerReference)
         
 class Parameter:
     def __init__(self, nextParameter, parameterName, parameterValues):
@@ -319,7 +265,7 @@ class Profiler:
         self._notifyUserUsingSound()
         videoIsGood = None
         while videoIsGood == None:
-            input("Are you happy with the video? [y/n] (simply press Enter for 'y')")
+            videoIsGood = input("Are you happy with the video? [y/n] (simply press Enter for 'y') ")
             if videoIsGood.lower() == 'y' or videoIsGood == '': #User pressed 'y' or Enter
                 videoIsGood = True
                 break
