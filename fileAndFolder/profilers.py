@@ -86,53 +86,59 @@ class Parameter:
         self.midIndex = None
         self.resetIndices()
         
+    def getParameterValue(self):#used in the test cases
+        return self.values[self.midIndex]
+    
+    def isThisParameterExhausted(self):#used in the test cases
+        return self.optionsExhausted
+        
     def createNewParameterValue(self, previousResultWasGood):#This function should not be called without a reset, once exhaustedOptions is True
-        if self.deepExhaustionCheck() or self.nextParameter == None:
-            if previousResultWasGood:
+        if self.deepExhaustionCheck(self.name):
+            if previousResultWasGood:                
                 self._moveLeftIndexToMid()
+                print(f"{self.name} Moved left index. mid index is now {self.midIndex} for {self.values}")
             else:
                 self._moveRightIndexToMid()
-            if not self.nextParameter == None:
-                self.deepReset()
+                print(f"{self.name} Moved right index. mid index is now {self.midIndex} for {self.values}")
+            if self.nextParameter:
+                print(f"initiating deep reset at {self.name} {self.values}")                
+                self.deepReset(self.name)#reset all child Parameters in the chain
         else:
+            print(f"Going deeper from {self.name}")
             self.nextParameter.createNewParameterValue(previousResultWasGood)
-              
+    
     def _recalculateMidIndex(self):
         if len(self.values) == 1:#single element
             self.midIndex = const.GlobalConstants.FIRST_POSITION_IN_LIST
             self.optionsExhausted = True
         else:
-            #print("right", self.rightIndex, "left", self.leftIndex, "mid", self.midIndex)
-            #print("int part", int((self.rightIndex - self.leftIndex) / 2))
             self.midIndex = self.leftIndex + int((self.rightIndex - self.leftIndex) / 2)
             if self.midIndex == self.leftIndex or self.midIndex == self.rightIndex:
+                print(f"Marking options exhausted in {self.name}")
                 self.optionsExhausted = True
 
     def _moveLeftIndexToMid(self):#when result is good
+        print(f"Moving left index to mid for {self.name}")
         self.leftIndex = self.midIndex        
         self._recalculateMidIndex()
+        print(f"left {self.leftIndex}, mid {self.midIndex}, right {self.rightIndex}")
         if self.leftIndex == self.midIndex: #if even mid recalculation caused mid not to move, it's because the options are down to 2
             self.midIndex += 1 #since mid index didn't move during recalculateMidIndex, manually move it to the only remaining option
             self.optionsExhausted = True
+            print(f"Marking options exhausted in {self.name}")
         
     def _moveRightIndexToMid(self):#when result is bad
+        print(f"Moving right index to mid for {self.name}")
         self.rightIndex = self.midIndex
         self._recalculateMidIndex()        
+        print(f"left {self.leftIndex}, mid {self.midIndex}, right {self.rightIndex}")
         if self.rightIndex == self.midIndex: #if even mid recalculation caused mid not to move, it's because the options are down to 2
             self.midIndex -= 1 #since mid index didn't move during recalculateMidIndex, manually move it to the only remaining option
             self.optionsExhausted = True
-        
-    def getParameterName(self):
-        return self.name
-    
-    def getParameterValue(self):
-        return self.values[self.midIndex]  
-    
-    def isThisParameterExhausted(self):
-        return self.optionsExhausted
+            print(f"Marking options exhausted in {self.name}")
     
     def retrieveAllParameterNamesAndValues(self, dictReference):
-        dictReference[self.name] = self.getParameterValue()
+        dictReference[self.name] = self.values[self.midIndex]
         if self.nextParameter:
             self.nextParameter.retrieveAllParameterNamesAndValues(dictReference)
         
@@ -144,15 +150,23 @@ class Parameter:
         if self.midIndex == self.leftIndex or self.midIndex == self.rightIndex:
             self.optionsExhausted = True           
         
-    def deepReset(self): #resets this and all lower elements in the chain
-        self.resetIndices()
+    def deepReset(self, invoker): #resets this and all lower elements in the chain
+        print(f"Resetting everything below {self.name}")
+        if self.name != invoker:
+            self.resetIndices()
         if self.nextParameter:#reset all next parameters in the chain
-            self.nextParameter.deepReset()
-            
-    def deepExhaustionCheck(self): #returns True if all lower elements in the chain have options exhausted
-        allDeeperElementsOptionsExhausted = self.optionsExhausted
-        if self.nextParameter and self.optionsExhausted:#proceed only if there's a next element and if current value is True (because even a single False should return False)
-            allDeeperElementsOptionsExhausted = self.nextParameter.deepExhaustionCheck()
+            self.nextParameter.deepReset(invoker)
+    
+    def deepExhaustionCheck(self, invokerName): #returns True if all lower elements in the chain have options exhausted. When invoked with invokerName==None, it considers even the current optioinsExhausted state      
+        if self.nextParameter:#proceed only if there's a next element and if current value is True (because even a single False should return False)
+            allDeeperElementsOptionsExhausted = self.nextParameter.deepExhaustionCheck(invokerName)        
+        else:
+            allDeeperElementsOptionsExhausted = True #default, for the case where there is no nextParameter
+        if invokerName == self.name:#don't consider self exhaustion. The objective is to check for exhaustion of all lower elements
+            pass
+        else:#this condition will happen when inside the chain or for example, when the highest calling function checks if all Parameters are exhausted. invokerName will be None
+            if self.optionsExhausted == False or allDeeperElementsOptionsExhausted == False:#if there's a even a single False detected along the chain, the end result given to the caller has to be False
+                allDeeperElementsOptionsExhausted = False
         return allDeeperElementsOptionsExhausted
 
 #-------------------------------------------------------
@@ -167,12 +181,12 @@ class BinarySearchSelector:
         self.param.retrieveAllParameterNamesAndValues(self.selectedParameters) #retrieve first chain of parameters. When Parameter is initialized, all indexes of parameter values will be at mid position
     
     def setNewParameters(self, previousResultWasGood):#should return an empty dict if no more parameters are there to process
+        self.nothingMoreToProcess = self.param.deepExhaustionCheck(None)
+        print("nothingMoreToProcess: ", self.nothingMoreToProcess, "previousResultSupplied: ", previousResultWasGood)
         if self.nothingMoreToProcess:
             self.selectedParameters = None
         else:
-            areOptionsExhausted = self.param.createNewParameterValue(previousResultWasGood)
-            if areOptionsExhausted:
-                self.nothingMoreToProcess = True
+            self.param.createNewParameterValue(previousResultWasGood)            
             #---collect the generated parameters (it goes through the chain of Parameter objects, adding name, value pairs to the dict)
             self.param.retrieveAllParameterNamesAndValues(self.selectedParameters)
 

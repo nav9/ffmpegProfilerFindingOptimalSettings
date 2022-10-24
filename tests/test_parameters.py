@@ -51,15 +51,41 @@ class TestPrameterFunctionality:
     
 class TestBinarySearchSelector:
     def test_settingNewParameter(self):    
-        param1_name = "abc"
+        param1_name = "P1"
         param1_values = [4,7,3,3]
-        param2_name = "def"
+        param2_name = "P2"
         param2_values = ['a', 's', 'd', 'f']        
         p = None        
         p = profilers.Parameter(p, param1_name, param1_values)
         p = profilers.Parameter(p, param2_name, param2_values)        
         s = profilers.BinarySearchSelector(p) 
         c = s.getParameters()
-        estimate = {"def": 's', "abc": 7}
-        assert str(estimate) == str(c)
+        shouldNowBe = {param2_name: 's', param1_name: 7}
+        assert str(shouldNowBe) == str(c) #converted to str just to ensure it's an exact match even in terms of the sequence of keys and values
+        
+    def test_settingParameterRepeatedly(self):    
+        param1_name = "P1"
+        param1_values = [4, 7, 3]
+        param2_name = "P2"
+        param2_values = ['a', 's', 'd', 'f']        
+        p = None        
+        p = profilers.Parameter(p, param1_name, param1_values)
+        p = profilers.Parameter(p, param2_name, param2_values)        
+        s = profilers.BinarySearchSelector(p) 
+        c = s.getParameters()
+        shouldNowBe = {param2_name: 's', param1_name: 7}
+        assert str(shouldNowBe) == str(c) #converted to str just to ensure it's an exact match even in terms of the sequence of keys and values
+        c = s.getParameters()
+        shouldNowBe = {param2_name: 's', param1_name: 7}
+        assert str(shouldNowBe) == str(c) #should remain same as the earlier assert        
+        previousResultWasGood = False
+        s.setNewParameters(previousResultWasGood)
+        c = s.getParameters()
+        shouldNowBe = {param2_name: 's', param1_name: 4}
+        assert str(shouldNowBe) == str(c)   
+        previousResultWasGood = False
+        s.setNewParameters(previousResultWasGood)
+        c = s.getParameters()
+        shouldNowBe = {param2_name: 'a', param1_name: 7}
+        assert str(shouldNowBe) == str(c) 
         
