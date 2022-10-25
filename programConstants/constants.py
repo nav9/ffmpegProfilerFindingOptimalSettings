@@ -13,7 +13,7 @@ class EncodingParameters:
     CRF = "-crf"
     PRESET = "-preset"
     #Note: These values need to be in the order of best to worst (what generates a good quality video with small file size and less CPU processing is 'best')
-    CRF_values = range(17, 29) #a subjectively sane range. Actual range should be 0 to 51, where 0 is lossless (for 8 bit only, for 10 bit use -qp 0). 23 is the default
+    CRF_values = range(10, 51) #Actual range should be 0 to 51, where 0 is lossless (for 8 bit only, for 10 bit use -qp 0). 23 is the default
     preset_values = ["veryslow", "slower", "slow", "medium", "fast", "faster", "veryfast", "superfast", "ultrafast"]
     
 class ProfiledData: #TODO: Find the units of these
