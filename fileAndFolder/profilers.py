@@ -274,14 +274,18 @@ class Profiler:
             print("Press 'a' to abort more encoding trials for this video. This assumes you aren't happy with the video.")
             videoIsGood = input("Your response? ")
             videoIsGood = videoIsGood.strip().lower()
+            logging.info(f"User response received: {videoIsGood}")
             if videoIsGood == 'y' or videoIsGood == '': #User pressed 'y' or Enter
                 videoIsGood = True
-                break
-            if videoIsGood == 'n': videoIsGood = False            
-            if videoIsGood == 'a': 
-                self.abort = True
-                videoIsGood = False
-            else: videoIsGood = None #to loop back and ask the User again for a proper response
+            else:
+                if videoIsGood == 'n': 
+                    videoIsGood = False            
+                else:
+                    if videoIsGood == 'a': 
+                        self.abort = True
+                        videoIsGood = False
+                    else: 
+                        videoIsGood = None #to loop back and ask the User again for a proper response
         return videoIsGood
     
     def getVideoDuration(self, filenameWithPath): #TODO: Could also use `pip install ffprobe-python`

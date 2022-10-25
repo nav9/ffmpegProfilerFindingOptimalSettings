@@ -81,3 +81,9 @@ Improvements:
 Questions:
 ---
 * Does audio lag happen after encoding? Under what situations?
+
+Observations about the videos:
+---
+* The video player matters. Linux's default video player ends up having jitter during scenes where the camera flies across a geography. No such issue observed with VLC.
+* 
+
