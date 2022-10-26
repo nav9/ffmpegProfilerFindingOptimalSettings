@@ -1,7 +1,13 @@
 Duration:
 ---
 Researching: 20 Oct 2022
-Design & implementation: 21 Oct 2022
+Design & implementation: 21 Oct 2022 - 24 Oct 2022
+Trials: 25 Oct 2022
+
+Objectives:
+---
+* Main goal is to understand how to minimize CPU usage.
+* Baseline benchmarking of the CPU usage percentage given by the OS (using utils like top, htop, etc) is fine to consider as a raw metric (which might include the impact of the sub parameters) to keep the scope in check and not go into a bigger loop. I/O is an issue, but is not a main bottleneck; it can be resolved by using SSD or NVME storage in AWS.
 
 Details:
 ---
