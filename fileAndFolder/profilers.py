@@ -103,6 +103,9 @@ class Parameter:
                 allDeeperElementsOptionsExhausted = False
         return allDeeperElementsOptionsExhausted
 
+    def manuallySetStartingIndex(self):#helpful when having aborted and needing to start at a chosen point
+        pass
+
 #-------------------------------------------------------
 #--- Selectors. Helps with selecting encoding parameters
 #-------------------------------------------------------
@@ -218,6 +221,7 @@ class Profiler:
     def _performProfiling(self, processRepresentation): #https://stackoverflow.com/questions/70724655/how-to-get-ram-and-cpu-time-consumption-python-app-on-linux
         with processRepresentation.oneshot():
             if processRepresentation.is_running():
+                totalMemory = processRepresentation.memory_info().vms + processRepresentation.memory_info().rss
                 self._recordProfiledData(processRepresentation.cpu_times(), processRepresentation.memory_info().vms)
                 #logging.info(f"Name: {processRepresentation.name()}, CPU Time: {processRepresentation.cpu_times()}, Memory: {processRepresentation.memory_info().vms}, CPU Percent: {processRepresentation.cpu_percent()}, num cores: {self.numberOfCPUs}") 
                 #logging.info(f"Creation time: {processRepresentation.create_time()}")  # return cached value
@@ -256,6 +260,7 @@ class Profiler:
         self._addToSummary(f"quality_{self.capturedData[const.ProfiledData.VIDEO_QUALITY]}")
         self._appendSummaryToFile()
         
+    #TODO: Could parallelise the program to run another video encoding while waiting for User input
     #TODO: Replace this function with an automated video quality and filesize Pareto assessment
     def _isEncodedVideoGoodEnough(self):
         print(f"\n\n\nOriginal video: {self.capturedData[const.ProfiledData.ORIGINAL_VIDEO_NAME_WITH_PATH]}")
