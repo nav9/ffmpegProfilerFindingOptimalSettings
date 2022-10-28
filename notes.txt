@@ -33,8 +33,9 @@ Reference:
 * Effect of CRF on Youtube video quality: https://www.dropbox.com/s/fsxew599dw30c5w/Report.docx?dl=0
 * Film making terms glossary: https://www.studiobinder.com/blog/movie-film-terms/
 * Visual information fidelity: https://github.com/pavancm/Visual-Information-Fidelity---Python
+* Image quality metrics (including VIFP) Python library (https://pypi.org/project/sewar/)
 * Objective video quality assessment: Zhou Wang, Hamid R. Sheikh and Alan C. Bovik. Chapter 41 in The Handbook of Video Databases: Design and Applications, B. Furht and O. Marqure, ed., CRC Press, pp. 1041-1078, September 2003
-* Netflix / vmaf: Video Multi-Method Assessment Fusion
+* Video quality assessment: Netflix / vmaf: Video Multi-Method Assessment Fusion: https://en.wikipedia.org/wiki/Video_Multimethod_Assessment_Fusion
 * Capped CRF: https://streaminglearningcenter.com/encoding/saving-encoding-streaming-deploy-capped-crf.html
 * NVIDIA transcoding guide: https://developer.nvidia.com/blog/nvidia-ffmpeg-transcoding-guide/
 * Process info (from Python): https://stackoverflow.com/questions/16326529/python-get-process-names-cpu-mem-usage-and-peak-mem-usage-in-windows
@@ -50,6 +51,11 @@ Reference:
 * Profiling Python code: https://stackoverflow.com/questions/582336/how-do-i-profile-a-python-script
 * Profiling FFMPEG using C++: https://ffmpeg-devel.ffmpeg.narkive.com/I8tuBDvU/profiling-the-library
 * Profiling from Python: https://psutil.readthedocs.io/en/latest/index.html?highlight=oneshot#psutil.Process.oneshot
+* Learning video quality metrics: https://www.amazon.com/gp/product/0998453005/ref=as_li_tl?ie=UTF8&tag=s0b649-20&camp=1789&creative=9325&linkCode=as2&creativeASIN=0998453005&linkId=aefb28b2d5273796a0d561808f34efbe
+* Learning FFMPEG: https://streaminglearningcenter.com/learnffmpeg
+* How to build your own cloud encoder: https://www.youtube.com/watch?v=mbaXINHo1Ys&feature=youtu.be
+* https://superuser.com/questions/489087/what-are-the-differences-between-h-264-profiles/489092#489092
+* Video compression picture types: https://en.wikipedia.org/wiki/Video_compression_picture_types#Bi-directional_predicted_frames.2Fslices_.28B-frames.2Fslices.29
 
 Terms (sourced from the sites referenced above):
 ---
@@ -75,6 +81,20 @@ source is compared against the corresponding pixel at the received video. 2. Red
 * Bitrate is the number of bits per second. A video bitrate is the number of bits that are processed in a unit of time. The symbol is bit/s. It generally determines the size and quality of video and audio files: the higher the bitrate, the better the quality, and the larger the file size because of File size = bitrate (kilobits per second) x duration. In most cases, 1 byte per second (1 B/s) corresponds to 8 bit/s.
 * How to find the optimal resolution to bitrate ratio? The truth is, there really is no right or wrong answer. Depending on your encoder, video content, audience, and streaming destination, your resolution and bitrate will likely be different. Key Considerations for Choosing a Resolution and Bitrate: 1. How much bandwidth do I have to broadcast? Dedicate 50% of your upload speed to your stream in case your connection suddenly becomes unstable or you encounter unexpected interference from sending across the internet to the streaming platform. If you have limited bandwidth at your broadcast site but your encoder is capable of streaming with a more efficient video codec like HEVC / H.265 instead of just H.264, you can send out a lower bitrate HEVC stream from your encoder and have it transcoded to H.264 in the cloud for final delivery to streaming destinations and viewers. 2. How is my audience watching? How much bandwidth do they have? Consider where and how your audience will be watching your video and what their bandwidth limitations may be. Are they on computers or mobile phones? Using Ethernet or LTE? If the majority of your audience doesn’t have enough bandwidth to watch your video in 1080p, then you shouldn’t have to push your bandwidth over the edge just to upload a 1080p video. Cloud transcoding can help those watching with slower connections or on mobile devices with data limits because it enables the single stream sent out from your encoder to be converted into several lower resolution and lower bitrate streams that the viewers can choose instead of each viewer receiving the same higher resolution / higher bitrate stream. 3. What type of content am I sending? How much do I need to send? More dynamic content requires higher bitrates to have good quality, so you will need a higher bitrate to stream sporting events or video game competitions as opposed to speakers giving presentations at a conference or commencement ceremonies. The encoded frame rate also affects the required bitrate. When streaming sports you could encode a 60 frames per second (fps) stream at 1080p60 or 720p60; for lower motion events like lectures or conferences, encoding and sending 60 fps may not provide a visible benefit, but requires significantly more bandwidth than streaming at the more common 30 fps. Not all online streaming platforms can accept a 60 fps stream, and not all viewers can handle receiving 60 fps, so be sure to take that into consideration. Finally, there are two different methods of encoding the video: constant and variable. A constant bitrate encodes at approximately the same rate throughout the stream. While this can help maintain consistent quality, a constant bitrate isn’t always ideal for streaming over the internet since the same amount of data is being sent even when the content isn’t very complex, incurring higher costs from mobile data plans. 4. To which CDN / OVP am I streaming? If you're streaming to a single destination - direct to Facebook Live or YouTube Live, for instance - then your encoder’s settings need to match that destination’s requirements for bitrate and resolution on the incoming stream. If you're using Core or Sharelink to stream to multiple destinations at the same time, then you need to choose encoding settings that are compatible with every destination, since the encoder will only send out a single stream into Core or Sharelink, and that stream is then replicated to each destination. Keep in mind that every streaming platform comes with different presets which may limit the video bitrate and resolution combinations they will accept.
 * What’s the difference between Constant Bitrate (CBR) and Variable Bitrate (VBR) Encoding. Constant bitrate (CBR) encoding maintains a set bitrate over the entire video clip, but limits the image quality in most cases—especially for complex video segments. CBR is often not an optimal choice for streaming since it does not allocate enough data for the complex segments: this results in lower quality overall and unused capacity on the simple segments. Therefore, we recommend you avoid using CBR unless you have a specific requirement.
+* Resolution is the number of pixels spread across a display and is usually written in the form of horizontal pixels x vertical pixels, such as 1920 x 1080. The resolution of your display affects the highest resolution of stream you can watch. Resolution is sometimes referred to in a shorthand format using just the vertical pixels, such as 720p instead of 1280x720.
+* Network bonding: If your available bandwidth isn’t robust enough to support streaming at your desired resolution and bitrate, you can use network bonding to combine bandwidth from multiple internet sources into a single, stronger connection. 
+* H.264 (=AVC=Advanced Video Coding) processes frames of video using macroblocks, while H.265 (=HEVC=High Efficiency Video Coding) processes information using coding tree units (CTUs). CTUs process information more efficiently, which results in a smaller file size and less bandwidth used for your streamed video.
+* Encoder settings: Protocol, video codec, framerate, keyframe frequency, audio codec, bitrate encoding, pixel aspect ratio, frame types, entropy encoding, audio sample rate, audio bitrate. (obtained from: https://support.google.com/youtube/answer/2853702?hl=en)
+* Video Multimethod Assessment Fusion (VMAF) is an objective full-reference video quality metric. It predicts subjective video quality based on a reference and distorted video sequence. The metric can be used to evaluate the quality of different video codecs, encoders, encoding settings, or transmission variants. 
+* Profile: A H.264 profile more or less defines what "bells and whistles" the encoder can use when compressing your video – and there are lots of H.264 features that the encoder can enable. Which ones it's allowed to enable is defined by the profile. Profiles ensure compatibility between devices that have different decoding capabilities. With profiles, the encoder and decoder agree on a feature set that they can both handle.
+* I‑frames are the least compressible but don't require other video frames to decode.
+* P‑frames can use data from previous frames to decompress and are more compressible than I‑frames.
+* B‑frames can use both previous and forward frames for data reference to get the highest amount of data compression.
+* A frame is a complete image.
+* a field is the set of odd-numbered or even-numbered scan lines composing a partial image. For example, an HD 1080 picture has 1080 lines (rows) of pixels. An odd field consists of pixel information for lines 1, 3, 5...1079. An even field has pixel information for lines 2, 4, 6...1080. When video is sent in interlaced-scan format, each frame is sent in two fields, the field of odd-numbered lines followed by the field of even-numbered lines. 
+* A frame used as a reference for predicting other frames is called a reference frame. 
+* Picture: While the terms "frame" and "picture" are often used interchangeably, the term picture is a more general notion, as a picture can be either a frame or a field.
+* "level" is a specified set of constraints that indicate a degree of required decoder performance for a profile. For example, a level of support within a profile specifies the maximum picture resolution, frame rate, and bit rate that a decoder may use. A decoder that conforms to a given level must be able to decode all bitstreams encoded for that level and all lower levels
 
 
 Improvements:
@@ -83,13 +103,19 @@ Improvements:
 * Hiring video consultants for some training to build in-house expertise.
 * Trying software like Sorenson and others, to check for better encoding capability.
 * Building in-house knowledge by automating software that tries out various parameters and outcomes.
+* Use VBR, increase the number of passes (at the expense of longer processing time)
+* Audio: 128kbps or higher is fine. Could stereo to mono in some cases, but cutting down audio is negligible.
+* Using a formula to get an estimated file size or encoding time. Could also build this knowledge in tables, as we process each video.
+* GPU
 
 Questions:
 ---
 * Does audio lag happen after encoding? Under what situations?
+* Paradox: H.265 will use more CPU when you try to stream in H.265 from a computer. However, it will give you higher quality at lower network speed.
+* The commercial use of patented H.264 technologies requires the payment of royalties to MPEG LA and other patent owners. MPEG LA has allowed the free use of H.264 technologies for streaming Internet video that is free to end users. Does commercial use of FFMPEG require paying royalties for any situation?
 
 Observations about the videos:
 ---
 * The video player matters. Linux's default video player ends up having jitter during scenes where the camera flies across a geography. No such issue observed with VLC.
-* 
+
 
