@@ -222,7 +222,7 @@ class Profiler:
         with processRepresentation.oneshot():
             if processRepresentation.is_running():
                 totalMemory = processRepresentation.memory_info().vms + processRepresentation.memory_info().rss
-                self._recordProfiledData(processRepresentation.cpu_times(), processRepresentation.memory_info().vms)
+                self._recordProfiledData(processRepresentation.cpu_times(), totalMemory)
                 #logging.info(f"Name: {processRepresentation.name()}, CPU Time: {processRepresentation.cpu_times()}, Memory: {processRepresentation.memory_info().vms}, CPU Percent: {processRepresentation.cpu_percent()}, num cores: {self.numberOfCPUs}") 
                 #logging.info(f"Creation time: {processRepresentation.create_time()}")  # return cached value
                 #logging.info(f"status: {processRepresentation.status()}")  # return cached value
