@@ -1,0 +1,8 @@
+https://gist.github.com/steven2358/ba153c642fe2bb1e47485962df07c730
+https://gist.github.com/Orangestar12/a6593a093d8728a268a799ff9003d815
+https://catswhocode.com/ffmpeg-commands/
+https://lzone.de/cheat-sheet/ffmpeg
+https://superuser.com/questions/490683/cheat-sheets-and-presets-settings-that-actually-work-with-ffmpeg-1-0
+https://cheat.sh/ffmpeg
+https://blog.wirelessmoves.com/2021/05/my-ffmpeg-cheat-sheet-for-video-transcoding.html
+https://cheatography.com/thetartankilt/cheat-sheets/ffmpeg/pdf_bw/ 

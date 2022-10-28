@@ -56,6 +56,7 @@ Reference:
 * How to build your own cloud encoder: https://www.youtube.com/watch?v=mbaXINHo1Ys&feature=youtu.be
 * https://superuser.com/questions/489087/what-are-the-differences-between-h-264-profiles/489092#489092
 * Video compression picture types: https://en.wikipedia.org/wiki/Video_compression_picture_types#Bi-directional_predicted_frames.2Fslices_.28B-frames.2Fslices.29
+* Encoding results: https://streaminglearningcenter.com/wp-content/uploads/2017/11/Encoding-Live-and-VOD-for-HEVC-fulllscreen.pdf
 
 Terms (sourced from the sites referenced above):
 ---
