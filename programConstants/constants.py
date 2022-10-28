@@ -6,7 +6,7 @@ class GlobalConstants:
     summaryFilename = "summary.txt"
     FIRST_POSITION_IN_LIST = 0
     SECOND_POSITION_IN_LIST = 1
-    supportedFormats = ['.mkv']
+    supportedFormats = ['.mkv', '.mp4']
     reportFolder = "reports"    
 
 class EncodingParameters:
@@ -14,7 +14,8 @@ class EncodingParameters:
     PRESET = "-preset"
     #Note: These values need to be in the order of best to worst (what generates a good quality video with small file size and less CPU processing is 'best')
     #CRF_values = range(10, 51) #Actual range should be 0 to 51, where 0 is lossless (for 8 bit only, for 10 bit use -qp 0). 23 is the default
-    CRF_values = range(25, 28)
+    #CRF_values = range(25, 35) #Ocean
+    CRF_values = range(32, 51) #Text
     #preset_values = ["veryslow", "slower", "slow", "medium", "fast", "faster", "veryfast", "superfast", "ultrafast"]
     preset_values = ["fast", "faster", "veryfast"]
     
