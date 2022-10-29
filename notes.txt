@@ -96,7 +96,8 @@ source is compared against the corresponding pixel at the received video. 2. Red
 * A frame used as a reference for predicting other frames is called a reference frame. 
 * Picture: While the terms "frame" and "picture" are often used interchangeably, the term picture is a more general notion, as a picture can be either a frame or a field.
 * "level" is a specified set of constraints that indicate a degree of required decoder performance for a profile. For example, a level of support within a profile specifies the maximum picture resolution, frame rate, and bit rate that a decoder may use. A decoder that conforms to a given level must be able to decode all bitstreams encoded for that level and all lower levels
-
+* Percona.com: Comparing Graviton (ARM) performance to Intel and AMD for MySQL.
+* densify.com: Key considerations for running workloads on AWS Graviton2 ARM processors.
 
 Improvements:
 ---

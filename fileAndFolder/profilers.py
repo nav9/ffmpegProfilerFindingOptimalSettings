@@ -109,7 +109,7 @@ class Parameter:
 #-------------------------------------------------------
 #--- Selectors. Helps with selecting encoding parameters
 #-------------------------------------------------------
-class BinarySearchSelector:
+class BinarySearchSelector: #Finds parameters in log(c) * log(p) * log(x) * ... time complexity, where c, p and x are each parameters of FFMPEG 
     def __init__(self, parameterChain):        
         #---Using Decorator Design Pattern to chain Parameter objects
         self.param = parameterChain
