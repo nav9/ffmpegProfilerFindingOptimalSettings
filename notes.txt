@@ -54,9 +54,12 @@ Reference:
 * Learning video quality metrics: https://www.amazon.com/gp/product/0998453005/ref=as_li_tl?ie=UTF8&tag=s0b649-20&camp=1789&creative=9325&linkCode=as2&creativeASIN=0998453005&linkId=aefb28b2d5273796a0d561808f34efbe
 * Learning FFMPEG: https://streaminglearningcenter.com/learnffmpeg
 * How to build your own cloud encoder: https://www.youtube.com/watch?v=mbaXINHo1Ys&feature=youtu.be
-* https://superuser.com/questions/489087/what-are-the-differences-between-h-264-profiles/489092#489092
+* Difference between H.264 profiles://superuser.com/questions/489087/what-are-the-differences-between-h-264-profiles/489092#489092
 * Video compression picture types: https://en.wikipedia.org/wiki/Video_compression_picture_types#Bi-directional_predicted_frames.2Fslices_.28B-frames.2Fslices.29
 * Encoding results: https://streaminglearningcenter.com/wp-content/uploads/2017/11/Encoding-Live-and-VOD-for-HEVC-fulllscreen.pdf
+* GPU encoders are faster but worse than CPU for visual quality: https://stackoverflow.com/questions/44510765/gpu-accelerated-video-processing-with-ffmpeg
+* Copy stream as-is without encoding: https://stackoverflow.com/questions/42301011/how-to-reduce-cpu-usage-of-ffmpeg
+* Minimise CPU usage: https://askubuntu.com/questions/365163/how-to-minimize-usage-of-cpu-memory-by-ffmpeg-when-recording-video
 
 Terms (sourced from the sites referenced above):
 ---
