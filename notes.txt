@@ -60,6 +60,12 @@ Reference:
 * GPU encoders are faster but worse than CPU for visual quality: https://stackoverflow.com/questions/44510765/gpu-accelerated-video-processing-with-ffmpeg
 * Copy stream as-is without encoding: https://stackoverflow.com/questions/42301011/how-to-reduce-cpu-usage-of-ffmpeg
 * Minimise CPU usage: https://askubuntu.com/questions/365163/how-to-minimize-usage-of-cpu-memory-by-ffmpeg-when-recording-video
+* Higher FPS; YUV, deFFcode: https://github.com/abhiTronix/deffcode/issues/15
+* With CPU limit: https://superuser.com/questions/1709440/converting-a-lot-of-video-files-to-h-265-safely
+* YUV playback: https://ottverse.com/ffmpeg-convert-avi-mp4-to-yuv-raw-playback-yuv-ffplay/
+* Reddit FFMPEG: https://www.reddit.com/r/ffmpeg/comments/fjv8fg/optimizing_cpu_usage_for_screen_recording/
+* FFMPEG filtergraph visualizer: https://www.reddit.com/r/ffmpeg/comments/fjv8fg/optimizing_cpu_usage_for_screen_recording/
+* Six FFMPEG commands: https://www.streamingmedia.com/Articles/Editorial/Featured-Articles/Discover-the-Six-FFmpeg-Commands-You-Cant-Live-Without-133179.aspx?utm_source=related_articles&utm_medium=gutenberg&utm_campaign=editors_selection
 
 Terms (sourced from the sites referenced above):
 ---
