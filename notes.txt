@@ -33,6 +33,7 @@ Reference:
 * Effect of CRF on Youtube video quality: https://www.dropbox.com/s/fsxew599dw30c5w/Report.docx?dl=0
 * Film making terms glossary: https://www.studiobinder.com/blog/movie-film-terms/
 * Visual information fidelity: https://github.com/pavancm/Visual-Information-Fidelity---Python
+* Video quality metrics: https://superuser.com/questions/338725/compare-two-video-files-to-find-out-which-has-best-quality
 * Image quality metrics (including VIFP) Python library (https://pypi.org/project/sewar/)
 * Objective video quality assessment: Zhou Wang, Hamid R. Sheikh and Alan C. Bovik. Chapter 41 in The Handbook of Video Databases: Design and Applications, B. Furht and O. Marqure, ed., CRC Press, pp. 1041-1078, September 2003
 * Video quality assessment: Netflix / vmaf: Video Multi-Method Assessment Fusion: https://en.wikipedia.org/wiki/Video_Multimethod_Assessment_Fusion
