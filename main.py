@@ -9,7 +9,8 @@ sys.dont_write_bytecode = True #Prevents the creation of some annoying cache fil
 import logging
 from logging.handlers import RotatingFileHandler
 from programConstants import constants as const
-from fileAndFolder import fileFolderOperations, reports, profilers
+from processing import profilers
+from fileAndFolder import fileFolderOperations, reports
 
 #TODO: shift log file config to file
 logFileName = 'logs_ffmpeg.log'

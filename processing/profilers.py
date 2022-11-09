@@ -1,6 +1,5 @@
 import os
 import time
-import shlex #useful for recognizing quotes inside a command to be split
 import numpy
 import psutil
 import subprocess
@@ -8,6 +7,7 @@ from collections import deque
 import logging
 from logging.handlers import RotatingFileHandler
 from programConstants import constants as const
+from processing import commandCreator
 
 #TODO: shift log file config to file
 logFileName = 'logs_ffmpeg.log'
@@ -136,6 +136,8 @@ class EvolutionarySearchSelector: #another way of selecting parameters
         pass
         
         
+
+    
 #-------------------------------------------------------
 #--- Profiling engine. Starts and monitors encoding
 #-------------------------------------------------------    
@@ -155,6 +157,7 @@ class Profiler:
         self.earlierEncodingTrialResultWasGood = None #The User was satisfied with the previous trial of a video's encoding
         self.abort = False
         self.summary = "" #summary info of an encoding that will be written to report later
+        self.commandCreator = commandCreator.CommandCreator()
         
     def startTrials(self, videoFile): #tries various FFMPEG parameters for this video 
         logging.info(f"\n\nStarting trials for video: {videoFile}")
@@ -186,7 +189,7 @@ class Profiler:
         outputFilename += ".mp4" #TODO: add proper extension
         outputFilename = os.path.join(folderForThisVideo, outputFilename)
         #---prepare the command
-        command = shlex.split(f"ffmpeg -y -i {originalFile} -c:a copy -c:v libx264 {parameters} {outputFilename}")       
+        command = self.commandCreator.generateEncoderCommand(parameters, originalFile, outputFilename)
         #---Run encoding command https://stackoverflow.com/questions/4256107/running-bash-commands-in-python
         logging.info("\n---------------------\n--- NEW RUN\n---------------------")
         logging.info(f"Running: {command}")
