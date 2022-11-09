@@ -5,6 +5,7 @@ reports/
 *.log
 #ignore log files ending with numbers
 *.log.[0-9]*
+*.zip
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
