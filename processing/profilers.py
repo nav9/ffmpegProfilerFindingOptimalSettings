@@ -110,8 +110,7 @@ class Parameter:
 #--- Selectors. Helps with selecting encoding parameters
 #-------------------------------------------------------
 class BinarySearchSelector: #Finds parameters in log(c) * log(p) * log(x) * ... time complexity, where c, p and x are each parameters of FFMPEG 
-    def __init__(self, parameterChain):        
-        #---Using Decorator Design Pattern to chain Parameter objects
+    def __init__(self, parameterChain):                
         self.param = parameterChain
         self.selectedParameters = dict() #From Python 3.6 onwards, the standard dict type maintains insertion order by default.
         self.nothingMoreToProcess = False
@@ -137,7 +136,6 @@ class EvolutionarySearchSelector: #another way of selecting parameters
         
         
 
-    
 #-------------------------------------------------------
 #--- Profiling engine. Starts and monitors encoding
 #-------------------------------------------------------    
@@ -145,9 +143,11 @@ class Profiler:
     def __init__(self, fileOps, report):        
         self.fileOps = fileOps
         self.report = report
+        #---Using Decorator Design Pattern to chain Parameter objects
         param = None
         param = Parameter(param, const.EncodingParameters.CRF, const.EncodingParameters.CRF_values)
         param = Parameter(param, const.EncodingParameters.PRESET, const.EncodingParameters.preset_values)        
+        #---pass parameters for Binary Search
         self.parameterSelector = BinarySearchSelector(param) #TODO: could pass this as a parameter to decouple
         self.currentParameters = None
         self.bestParametersSoFar = None #parameters approved by the User or video quality evaluation function
