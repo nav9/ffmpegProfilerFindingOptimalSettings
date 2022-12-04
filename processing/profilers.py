@@ -253,7 +253,7 @@ class Profiler:
         self.capturedData[const.ProfiledData.CPU_TIME] = sum(self.capturedData[const.ProfiledData.CPU_TIME])
         self.capturedData[const.ProfiledData.MEMORY_CONSUMED] = numpy.mean(self.capturedData[const.ProfiledData.MEMORY_CONSUMED])
         #---Determine if video quality is acceptable
-        self.earlierEncodingTrialResultWasGood = self._isEncodedVideoGoodEnough()
+        self.earlierEncodingTrialResultWasGood = self._isEncodedVideoGoodEnough_subjectiveEvaluation()
         self.capturedData[const.ProfiledData.VIDEO_QUALITY] = self.earlierEncodingTrialResultWasGood
         self._addToSummary(f"timeToEncode_{self.capturedData[const.ProfiledData.ENCODING_TIME]}")
         self._addToSummary(f"CPU_{self.capturedData[const.ProfiledData.CPU_TIME]}")        
@@ -265,7 +265,7 @@ class Profiler:
         
     #TODO: Could parallelise the program to run another video encoding while waiting for User input
     #TODO: Replace this function with an automated video quality and filesize Pareto assessment
-    def _isEncodedVideoGoodEnough(self):
+    def _isEncodedVideoGoodEnough_subjectiveEvaluation(self):
         print(f"\n\n\nOriginal video: {self.capturedData[const.ProfiledData.ORIGINAL_VIDEO_NAME_WITH_PATH]}")
         print(f"Encoded video: {self.capturedData[const.ProfiledData.VIDEO_NAME_WITH_PATH]}")
         print(f"Original: File size: {self.originalFileSize}")        
@@ -295,6 +295,9 @@ class Profiler:
                     else: 
                         videoIsGood = None #to loop back and ask the User again for a proper response
         return videoIsGood
+    
+    def _isEncodedVideoGoodEnough_objectiveEvaluation(self):#https://github.com/slhck/ffmpeg-quality-metrics
+        pass
     
     def getVideoDuration(self, filenameWithPath): #TODO: Could also use `pip install ffprobe-python`
         result = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", filenameWithPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)

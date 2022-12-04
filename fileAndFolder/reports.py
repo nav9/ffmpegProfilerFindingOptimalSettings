@@ -1,7 +1,6 @@
 import os
 import datetime
 import logging
-import PySimpleGUI as gui
 from logging.handlers import RotatingFileHandler
 
 #TODO: shift log file config to file
