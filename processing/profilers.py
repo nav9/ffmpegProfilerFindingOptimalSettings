@@ -7,7 +7,7 @@ from collections import deque
 import logging
 from logging.handlers import RotatingFileHandler
 from programConstants import constants as const
-from processing import commandCreator
+from processing import commandCreator, videoProcessor
 
 #TODO: shift log file config to file
 logFileName = 'logs_ffmpeg.log'
@@ -142,7 +142,7 @@ class EvolutionarySearchSelector: #another way of selecting parameters
 class Profiler:
     def __init__(self, fileOps, report):        
         self.fileOps = fileOps
-        self.report = report
+        self.report = report        
         #---Using Decorator Design Pattern to chain Parameter objects
         param = None
         param = Parameter(param, const.EncodingParameters.CRF, const.EncodingParameters.CRF_values)
@@ -253,6 +253,7 @@ class Profiler:
         self.capturedData[const.ProfiledData.CPU_TIME] = sum(self.capturedData[const.ProfiledData.CPU_TIME])
         self.capturedData[const.ProfiledData.MEMORY_CONSUMED] = numpy.mean(self.capturedData[const.ProfiledData.MEMORY_CONSUMED])
         #---Determine if video quality is acceptable
+        #self.earlierEncodingTrialResultWasGood = self._isEncodedVideoGoodEnough_objectiveEvaluation()
         self.earlierEncodingTrialResultWasGood = self._isEncodedVideoGoodEnough_subjectiveEvaluation()
         self.capturedData[const.ProfiledData.VIDEO_QUALITY] = self.earlierEncodingTrialResultWasGood
         self._addToSummary(f"timeToEncode_{self.capturedData[const.ProfiledData.ENCODING_TIME]}")
@@ -263,8 +264,20 @@ class Profiler:
         self._addToSummary(f"quality_{self.capturedData[const.ProfiledData.VIDEO_QUALITY]}")
         self._appendSummaryToFile()
         
+    def _isEncodedVideoGoodEnough_objectiveEvaluation(self):        
+        videoIsGood = True
+        original = self.capturedData[const.ProfiledData.ORIGINAL_VIDEO_NAME_WITH_PATH] 
+        encoded = self.capturedData[const.ProfiledData.VIDEO_NAME_WITH_PATH]
+        self.qualityEvaluator = videoProcessor.VideoQualityEvaluator([original, encoded], self.fileOps)
+        numberOfComparisons = 10
+        scores = self.qualityEvaluator.getScoresForVideosAtRandomFrames(original, encoded, numberOfComparisons)
+        print(f"MSSSIM Scores: {scores}")
+        acceptableScore = 0.9
+        if any(score < acceptableScore for score in scores):
+            videoIsGood = False
+        return videoIsGood
+    
     #TODO: Could parallelise the program to run another video encoding while waiting for User input
-    #TODO: Replace this function with an automated video quality and filesize Pareto assessment
     def _isEncodedVideoGoodEnough_subjectiveEvaluation(self):
         print(f"\n\n\nOriginal video: {self.capturedData[const.ProfiledData.ORIGINAL_VIDEO_NAME_WITH_PATH]}")
         print(f"Encoded video: {self.capturedData[const.ProfiledData.VIDEO_NAME_WITH_PATH]}")
@@ -295,9 +308,6 @@ class Profiler:
                     else: 
                         videoIsGood = None #to loop back and ask the User again for a proper response
         return videoIsGood
-    
-    def _isEncodedVideoGoodEnough_objectiveEvaluation(self):#https://github.com/slhck/ffmpeg-quality-metrics
-        pass
     
     def getVideoDuration(self, filenameWithPath): #TODO: Could also use `pip install ffprobe-python`
         result = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", filenameWithPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)

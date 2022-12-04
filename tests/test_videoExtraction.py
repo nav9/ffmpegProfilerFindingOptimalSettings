@@ -38,7 +38,8 @@ class ImageAndVideoGenerator: #https://stackoverflow.com/questions/15261851/100x
         plotter.savefig(filenameWithPath)   
         
     def generateVideoFromImages(self, folderWithImages, imagePrefix, imageExtension, videoNameWithPath):
-        command = f"ffmpeg -r 25 -i {folderWithImages}{imagePrefix}%d{imageExtension} -vcodec mpeg4 -y {videoNameWithPath}"
+        framerate = 25; videoCodec = "mpeg4"
+        command = f"ffmpeg -r {framerate} -i {folderWithImages}{imagePrefix}%d{imageExtension} -vcodec {videoCodec} -y {videoNameWithPath}"
         #subprocess.Popen(command) #Absolute path may need to be given to use this command
         os.system(command)
         
@@ -91,11 +92,12 @@ class TestVideoExtraction:
         videoNameWithPath = os.path.join(videoLocation, videoName)
         gen.generateVideoFromImages(folderLocation, imageFilename, constants.Tests.PNG_Extension, videoNameWithPath)
     
-    def test_gettingImageAtFrame1(self):
-        imageFilename = "rand"; folderPathAndName = "imagesForRandVideo"
-        imageWidth = 640; imageHeight = 480; numberOfVideoFrames = 10
-        videoFoldername = "randVideo"; videoName = "video.mp4"
-        self.generateRandomVideo(imageFilename, folderPathAndName, imageWidth, imageHeight, numberOfVideoFrames, videoFoldername, videoName)
+    # #DO NOT DELETE: This is a working function for generating random video. Not yet developed into a test case though
+    # def test_gettingImageAtFrame1(self):
+    #     imageFilename = "rand"; folderPathAndName = "imagesForRandVideo"
+    #     imageWidth = 640; imageHeight = 480; numberOfVideoFrames = 10
+    #     videoFoldername = "randVideo"; videoName = "video.mp4"
+    #     self.generateRandomVideo(imageFilename, folderPathAndName, imageWidth, imageHeight, numberOfVideoFrames, videoFoldername, videoName)
         
     def test_gettingImageAtFrame(self):
         imageFilename = "bar"; folderPathAndName = "imagesForBarVideo"

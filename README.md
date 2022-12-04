@@ -6,7 +6,7 @@ Python 3.6+ (for this project, Python 3.9.13 was used).
 To install required packages, use: `pip install -r requirements.txt`. (There are also automated tools like pipreqs, pipreqsnb or pigar, which can install the required packages).  
   
 * `pip install ffmpeg-quality-metrics==3.0.0` for [image quality metrics](https://github.com/slhck/ffmpeg-quality-metrics). Also make sure `ffmpeg` and `ffprobe` are installed.   
-* For future trials: `pip install sewar` could also be attempted for image quality metrics.  
+* For future trials: `pip install sewar==0.4.5` could also be attempted for image quality metrics.  
 * `pip3 install opencv-contrib-python==4.5.5.62` for extracting frames from videos.  
   
 # Running the test cases  

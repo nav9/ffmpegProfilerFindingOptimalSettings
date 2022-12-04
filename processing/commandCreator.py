@@ -19,18 +19,27 @@ class EncoderCommand:
         
     def setVideoCodec(self):
         self.codec = "-c:v libx264"
+        
+    def suppressReportPrinting(self):#lines starting with "frame=" that are output every few frames
+        self.noStats = "-nostats"
+        
+    def suppressBanner(self):#copyright notice, libraries, etc
+        self.noBanner = "-hide_banner"
     
     def setParameters(self, parameters):
         self.parameters = parameters
     
+    #TODO: This function needs to be made generic. The way the command is being created here is pointless
     def generateSimpleEncoderCommand(self, parameterString, inputFile, outputFilename):
+        self.suppressReportPrinting()
+        self.suppressBanner()
         self.setParameters(parameterString)
         self.setInputFile(inputFile)
         self.setOutputFile(outputFilename)
         self.setToOverwriteExistingFile()
         self.copyAudioUnchanged()
         self.setVideoCodec()
-        self.command = shlex.split(f"{self.ffmpeg} {self.overwrite} {self.inputFile} {self.audio} {self.codec} {self.parameters} {self.outputFile}")
+        self.command = shlex.split(f"{self.ffmpeg} {self.noStats} {self.noBanner} {self.overwrite} {self.inputFile} {self.audio} {self.codec} {self.parameters} {self.outputFile}")
         return self.command
     
 class CommandCreator:
