@@ -9,6 +9,12 @@ from programConstants import constants
 import matplotlib.pyplot as plotter
 from fileAndFolder import fileFolderOperations as fileOps
 
+
+
+#Note: These test cases are still under construction. Don't use them
+
+
+
 class ImageAndVideoGenerator: #https://stackoverflow.com/questions/15261851/100x100-image-with-random-pixel-colour
     def __init__(self):
         self.IMAGE_Z_AXIS = 3

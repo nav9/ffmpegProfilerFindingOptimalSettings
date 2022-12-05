@@ -3,11 +3,10 @@ A profiler for FFMPEG that helps you find the optimal settings to encode a good 
   
 # Requirement  
 Python 3.6+ (for this project, Python 3.9.13 was used).  
-To install required packages, use: `pip install -r requirements.txt`. (There are also automated tools like pipreqs, pipreqsnb or pigar, which can install the required packages).  
+* To install required packages, use: `pip install -r requirements.txt`. (There are also automated tools like pipreqs, pipreqsnb or pigar, which can install the required packages).  
+* Install `sudo apt install ffmpeg ffprobe`.  
   
-* `pip install ffmpeg-quality-metrics==3.0.0` for [image quality metrics](https://github.com/slhck/ffmpeg-quality-metrics). Also make sure `ffmpeg` and `ffprobe` are installed.   
-* For future trials: `pip install sewar==0.4.5` could also be attempted for image quality metrics.  
-* `pip3 install opencv-contrib-python==4.5.5.62` for extracting frames from videos.  
+`ffmpeg-quality-metrics` is planend to be used for [image quality metrics](https://github.com/slhck/ffmpeg-quality-metrics). The `sewar` package could also be attempted for image quality metrics. The `opencv-contrib-python` package is used by the test cases for extracting frames from videos.  
   
 # Running the test cases  
 First install PyTest: `pip install pytest==7.1.2`.  

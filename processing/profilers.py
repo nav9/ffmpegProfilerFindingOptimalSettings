@@ -241,7 +241,7 @@ class Profiler:
         self.capturedData[const.ProfiledData.MEMORY_CONSUMED] = deque()
         
     def _recordProfiledData(self, cpuTimes, memory):
-        self.capturedData[const.ProfiledData.CPU_TIME].append(cpuTimes.user) #TODO: check if other cpuTimes need to be captured
+        self.capturedData[const.ProfiledData.CPU_TIME].append(cpuTimes.user + cpuTimes.system) #TODO: check if other cpuTimes need to be captured
         self.capturedData[const.ProfiledData.MEMORY_CONSUMED].append(memory)
         
     #TODO: take care of condition when there is some encoding error
@@ -281,8 +281,8 @@ class Profiler:
     def _isEncodedVideoGoodEnough_subjectiveEvaluation(self):
         print(f"\n\n\nOriginal video: {self.capturedData[const.ProfiledData.ORIGINAL_VIDEO_NAME_WITH_PATH]}")
         print(f"Encoded video: {self.capturedData[const.ProfiledData.VIDEO_NAME_WITH_PATH]}")
-        print(f"Original: File size: {self.originalFileSize}")        
-        print(f"Encoded: File size: {self.capturedData[const.ProfiledData.GENERATED_FILE_SIZE]}, time to encode: {self.capturedData[const.ProfiledData.ENCODING_TIME]}, CPU: {self.capturedData[const.ProfiledData.CPU_TIME]}")
+        print(f"Original: File size: {self.originalFileSize / const.GlobalConstants.MiB_inBytes} MiB")        
+        print(f"Encoded: File size: {self.capturedData[const.ProfiledData.GENERATED_FILE_SIZE] / const.GlobalConstants.MiB_inBytes} MiB, time to encode: {self.capturedData[const.ProfiledData.ENCODING_TIME]}sec, CPU: {self.capturedData[const.ProfiledData.CPU_TIME]}")
         if self.originalFileSize > self.capturedData[const.ProfiledData.GENERATED_FILE_SIZE]: print("Encoded file is smaller")
         print("Please view the encoded video. Are you happy with the quality and file size?")
         print("Selecting 'y' will try another encoding with worse parameters. Selecting 'n' will try encoding with better parameters.")
