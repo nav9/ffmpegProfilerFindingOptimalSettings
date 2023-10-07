@@ -1,5 +1,6 @@
 import os
 import time
+import shlex #useful for recognizing quotes inside a command to be split
 import numpy
 import psutil
 import subprocess
@@ -7,7 +8,6 @@ from collections import deque
 import logging
 from logging.handlers import RotatingFileHandler
 from programConstants import constants as const
-from processing import commandCreator, videoProcessor
 
 #TODO: shift log file config to file
 logFileName = 'logs_ffmpeg.log'
@@ -110,7 +110,8 @@ class Parameter:
 #--- Selectors. Helps with selecting encoding parameters
 #-------------------------------------------------------
 class BinarySearchSelector: #Finds parameters in log(c) * log(p) * log(x) * ... time complexity, where c, p and x are each parameters of FFMPEG 
-    def __init__(self, parameterChain):                
+    def __init__(self, parameterChain):        
+        #---Using Decorator Design Pattern to chain Parameter objects
         self.param = parameterChain
         self.selectedParameters = dict() #From Python 3.6 onwards, the standard dict type maintains insertion order by default.
         self.nothingMoreToProcess = False
@@ -135,19 +136,16 @@ class EvolutionarySearchSelector: #another way of selecting parameters
         pass
         
         
-
 #-------------------------------------------------------
 #--- Profiling engine. Starts and monitors encoding
 #-------------------------------------------------------    
 class Profiler:
     def __init__(self, fileOps, report):        
         self.fileOps = fileOps
-        self.report = report        
-        #---Using Decorator Design Pattern to chain Parameter objects
+        self.report = report
         param = None
         param = Parameter(param, const.EncodingParameters.CRF, const.EncodingParameters.CRF_values)
         param = Parameter(param, const.EncodingParameters.PRESET, const.EncodingParameters.preset_values)        
-        #---pass parameters for Binary Search
         self.parameterSelector = BinarySearchSelector(param) #TODO: could pass this as a parameter to decouple
         self.currentParameters = None
         self.bestParametersSoFar = None #parameters approved by the User or video quality evaluation function
@@ -157,7 +155,6 @@ class Profiler:
         self.earlierEncodingTrialResultWasGood = None #The User was satisfied with the previous trial of a video's encoding
         self.abort = False
         self.summary = "" #summary info of an encoding that will be written to report later
-        self.commandCreator = commandCreator.CommandCreator()
         
     def startTrials(self, videoFile): #tries various FFMPEG parameters for this video 
         logging.info(f"\n\nStarting trials for video: {videoFile}")
@@ -189,7 +186,7 @@ class Profiler:
         outputFilename += ".mp4" #TODO: add proper extension
         outputFilename = os.path.join(folderForThisVideo, outputFilename)
         #---prepare the command
-        command = self.commandCreator.generateEncoderCommand(parameters, originalFile, outputFilename)
+        command = shlex.split(f"ffmpeg -y -i {originalFile} -c:a copy -c:v libx264 {parameters} {outputFilename}")       
         #---Run encoding command https://stackoverflow.com/questions/4256107/running-bash-commands-in-python
         logging.info("\n---------------------\n--- NEW RUN\n---------------------")
         logging.info(f"Running: {command}")
@@ -241,7 +238,7 @@ class Profiler:
         self.capturedData[const.ProfiledData.MEMORY_CONSUMED] = deque()
         
     def _recordProfiledData(self, cpuTimes, memory):
-        self.capturedData[const.ProfiledData.CPU_TIME].append(cpuTimes.user + cpuTimes.system) #TODO: check if other cpuTimes need to be captured
+        self.capturedData[const.ProfiledData.CPU_TIME].append(cpuTimes.user) #TODO: check if other cpuTimes need to be captured
         self.capturedData[const.ProfiledData.MEMORY_CONSUMED].append(memory)
         
     #TODO: take care of condition when there is some encoding error
@@ -253,8 +250,7 @@ class Profiler:
         self.capturedData[const.ProfiledData.CPU_TIME] = sum(self.capturedData[const.ProfiledData.CPU_TIME])
         self.capturedData[const.ProfiledData.MEMORY_CONSUMED] = numpy.mean(self.capturedData[const.ProfiledData.MEMORY_CONSUMED])
         #---Determine if video quality is acceptable
-        #self.earlierEncodingTrialResultWasGood = self._isEncodedVideoGoodEnough_objectiveEvaluation()
-        self.earlierEncodingTrialResultWasGood = self._isEncodedVideoGoodEnough_subjectiveEvaluation()
+        self.earlierEncodingTrialResultWasGood = self._isEncodedVideoGoodEnough()
         self.capturedData[const.ProfiledData.VIDEO_QUALITY] = self.earlierEncodingTrialResultWasGood
         self._addToSummary(f"timeToEncode_{self.capturedData[const.ProfiledData.ENCODING_TIME]}")
         self._addToSummary(f"CPU_{self.capturedData[const.ProfiledData.CPU_TIME]}")        
@@ -264,25 +260,13 @@ class Profiler:
         self._addToSummary(f"quality_{self.capturedData[const.ProfiledData.VIDEO_QUALITY]}")
         self._appendSummaryToFile()
         
-    def _isEncodedVideoGoodEnough_objectiveEvaluation(self):        
-        videoIsGood = True
-        original = self.capturedData[const.ProfiledData.ORIGINAL_VIDEO_NAME_WITH_PATH] 
-        encoded = self.capturedData[const.ProfiledData.VIDEO_NAME_WITH_PATH]
-        self.qualityEvaluator = videoProcessor.VideoQualityEvaluator([original, encoded], self.fileOps)
-        numberOfComparisons = 10
-        scores = self.qualityEvaluator.getScoresForVideosAtRandomFrames(original, encoded, numberOfComparisons)
-        print(f"MSSSIM Scores: {scores}")
-        acceptableScore = 0.9
-        if any(score < acceptableScore for score in scores):
-            videoIsGood = False
-        return videoIsGood
-    
     #TODO: Could parallelise the program to run another video encoding while waiting for User input
-    def _isEncodedVideoGoodEnough_subjectiveEvaluation(self):
+    #TODO: Replace this function with an automated video quality and filesize Pareto assessment
+    def _isEncodedVideoGoodEnough(self):
         print(f"\n\n\nOriginal video: {self.capturedData[const.ProfiledData.ORIGINAL_VIDEO_NAME_WITH_PATH]}")
         print(f"Encoded video: {self.capturedData[const.ProfiledData.VIDEO_NAME_WITH_PATH]}")
-        print(f"Original: File size: {self.originalFileSize / const.GlobalConstants.MiB_inBytes} MiB")        
-        print(f"Encoded: File size: {self.capturedData[const.ProfiledData.GENERATED_FILE_SIZE] / const.GlobalConstants.MiB_inBytes} MiB, time to encode: {self.capturedData[const.ProfiledData.ENCODING_TIME]}sec, CPU: {self.capturedData[const.ProfiledData.CPU_TIME]}")
+        print(f"Original: File size: {self.originalFileSize}")        
+        print(f"Encoded: File size: {self.capturedData[const.ProfiledData.GENERATED_FILE_SIZE]}, time to encode: {self.capturedData[const.ProfiledData.ENCODING_TIME]}, CPU: {self.capturedData[const.ProfiledData.CPU_TIME]}")
         if self.originalFileSize > self.capturedData[const.ProfiledData.GENERATED_FILE_SIZE]: print("Encoded file is smaller")
         print("Please view the encoded video. Are you happy with the quality and file size?")
         print("Selecting 'y' will try another encoding with worse parameters. Selecting 'n' will try encoding with better parameters.")

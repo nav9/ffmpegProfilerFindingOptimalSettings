@@ -25,6 +25,7 @@ logging.getLogger().setLevel(loggingLevel)
 if __name__ == '__main__':
     fileOps = fileFolderOperations.FileOperations()
     report = reports.Reports(const.GlobalConstants.reportFolder, fileOps)
+    logging.info(f"Searching in folder: {const.GlobalConstants.originalVideoFilesFolder}")
     videoFilesToProcess = fileOps.getNamesOfVideoFilesToProcess(const.GlobalConstants.originalVideoFilesFolder, const.GlobalConstants.supportedFormats)
     report.add(f"Processing: {videoFilesToProcess}")
     #---start profiling
