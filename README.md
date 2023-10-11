@@ -23,3 +23,5 @@ You can also run tests in the following ways:
 * Tests in a directory: `pytest tests/testing/`
 * Tests by keyword expressions: `pytest -k "MyClass and not method"`
 * [and more](https://stackoverflow.com/a/54493489/453673).
+
+  [![Donate](https://raw.githubusercontent.com/nav9/VCF_contacts_merger/main/gallery/thankYouDonateButton.png)](https://nrecursions.blogspot.com/2020/08/saying-thank-you.html)  
